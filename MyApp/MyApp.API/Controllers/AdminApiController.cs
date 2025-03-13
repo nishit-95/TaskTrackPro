@@ -8,7 +8,7 @@ namespace MyApp.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class UserController : ControllerBase
+    public class AdminApiController : ControllerBase
     {
         
     }
