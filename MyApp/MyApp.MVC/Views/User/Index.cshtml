@@ -294,6 +294,8 @@
   <script>
     $(document).ready(function () {
       var email = "v@gmail.com";
+      console.log(email);
+      console.log("Before loading profile...");
       function LoadProfile(email) {
         console.log("Loading profile..." + email);
         $.ajax({
@@ -341,6 +343,7 @@
       }
 
 
+console.log("After loading profile...");
 
 
 

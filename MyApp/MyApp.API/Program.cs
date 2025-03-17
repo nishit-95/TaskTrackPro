@@ -15,12 +15,7 @@ builder.Services.AddScoped<NpgsqlConnection>((parameter) =>
     return new NpgsqlConnection(ConnectionString);
 });
 
-builder.Services.AddSingleton<NpgsqlConnection>((UserRepository) =>
-{
-    var connectionString = UserRepository.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
-    return new NpgsqlConnection(connectionString);
-});
-builder.Services.AddSingleton<IUserProfileInterface, UserProfileRepository>();
+builder.Services.AddScoped<IUserProfileInterface, UserProfileRepository>();
 
 var app = builder.Build();
 
