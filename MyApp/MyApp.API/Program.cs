@@ -53,21 +53,12 @@ builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 }));
 
 builder.Services.AddControllers();
-builder.Services.AddScoped<NpgsqlConnection>((parameter) =>
+builder.Services.AddSingleton<NpgsqlConnection>((parameter) =>
 {
     var ConnectionString = parameter.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
     return new NpgsqlConnection(ConnectionString);
 });
 // builder.Services.AddScoped<>
-builder.Services.AddScoped<IUserInterface, UserRepository>();
-
-
-
-builder.Services.AddSingleton<NpgsqlConnection>((UserRepository) =>
-{
-    var connectionString = UserRepository.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
-    return new NpgsqlConnection(connectionString);
-});
 builder.Services.AddSingleton<IUserProfileInterface, UserProfileRepository>();
 builder.Services.AddSingleton<IAdminInterface, AdminRepository>();
 builder.Services.AddSingleton<IUserInterface, UserRepository>();
@@ -77,6 +68,8 @@ services.AddSingleton<IConnectionMultiplexer>(sp =>
     var configuration = builder.Configuration.GetConnectionString("RedisConnection");
     return ConnectionMultiplexer.Connect(configuration);
 });
+builder.Services.AddSingleton<RedisService>();
+builder.Services.AddSingleton<RabbitMQService>();
 
 // Register your repository
 services.AddSingleton<IAdminInterface, AdminRepository>();

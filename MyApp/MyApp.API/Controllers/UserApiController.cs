@@ -7,6 +7,7 @@ using MyApp.Core.Model;
 using MyApp.Core.Repositories.Interfaces;
 using MyApp.Core.Models;
 using MyApp.Core.Services;
+using Elastic.Clients.Elasticsearch.MachineLearning;
 
 namespace MyApp.API.Controllers
 {
@@ -16,25 +17,36 @@ namespace MyApp.API.Controllers
     {
         private readonly IUserInterface _userServices;
         private readonly ElasticSearchService _elasticSearchService;
-        private readonly RabbitMQService _rabbitMQService;
+        // private readonly RabbitMQService _rabbitMQService;
+        private readonly RedisService _redisService;
 
-        public UserApiController(ElasticSearchService elasticSearchService, RabbitMQService rabbitMQService, IUserInterface userServices)
+        public UserApiController(ElasticSearchService elasticSearchService, IUserInterface userServices, RedisService redisService)
         {
+            // RabbitMQService rabbitMQService
             _elasticSearchService = elasticSearchService;
-            _rabbitMQService = rabbitMQService;
+            // _rabbitMQService = rabbitMQService;
             _userServices = userServices;
+            _redisService = redisService;
         }
 
         [HttpGet]
         [Route("GetTaskByUserId/{userId}")]
+
         public async Task<IActionResult> GetTaskByUserId(int userId)
         {
-            List<t_task_user> TaskList = await _userServices.GetTaskByUserId(userId);
-            if (TaskList == null)
+            List<t_task_user> taskList = await _redisService.GetTaskList(userId);
+            System.Console.WriteLine("from redis");
+            if (taskList.Count == 0)
             {
-                return BadRequest("From User API Controller : There was some error while fetching the tasks");
+                System.Console.WriteLine("form database");
+                taskList = await _userServices.GetTaskByUserId(userId);
+                if (taskList == null)
+                {
+                    return BadRequest("From User API Controller : There was some error while fetching the tasks");
+                }
+                _redisService.SetTaskList(userId, taskList);
             }
-            return Ok(TaskList);
+            return Ok(taskList);
         }
 
         [HttpGet]
@@ -72,3 +84,4 @@ namespace MyApp.API.Controllers
         }
     }
 }
+
