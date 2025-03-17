@@ -1,0 +1,342 @@
+@* <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User List</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            margin-top: 20px;
+        }
+
+        .card-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .card {
+            width: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .card-body {
+            padding: 15px;
+        }
+
+        .card h5 {
+            margin: 10px 0;
+        }
+
+        .status {
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2 class="text-center">User List</h2>
+        <div id="userList" class="card-list">
+            <p class="text-center">Loading users...</p>
+        </div>
+    </div>
+
+    <script>
+        async function fetchUsers() {
+            try {
+                const response = await fetch('http://localhost:5112/api/admin/users'); // Change URL if needed
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const users = await response.json();
+
+                if (!users || users.length === 0) {
+                    document.getElementById('userList').innerHTML = '<p class="text-center">No users found.</p>';
+                    return;
+                }
+
+                let userCards = '';
+                users.forEach(user => {
+                    userCards += `
+                        <div class="card">
+                            <img src="${user.C_Image ? user.C_Image : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsoEAMYKHiwI5JH_IlxayW3-9UurHlASFy9A&s'}" alt="User Image">
+                            <div class="card-body">
+                                <h5>${user.C_UserName}</h5>
+                                <p>Email: ${user.C_Email}</p>
+                                <p>Mobile: ${user.C_Mobile}</p>
+                                <p>Gender: ${user.C_Gender}</p>
+                                <p class="status">Status: ${user.C_Status}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('userList').innerHTML = userCards;
+            } catch (error) {
+                console.error('Error fetching users:', error);
+                document.getElementById('userList').innerHTML = '<p class="text-center text-danger">Failed to load users.</p>';
+            }
+        }
+
+        fetchUsers(); // Call function to load users
+    </script>
+
+</body>
+
+</html> *@
+
+
+@* <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User List</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            margin-top: 20px;
+        }
+
+        .card-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .card {
+            width: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .card-body {
+            padding: 15px;
+        }
+
+        .card h5 {
+            margin: 10px 0;
+        }
+
+        .status {
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2 class="text-center">User List</h2>
+        <div id="userList" class="card-list">
+            <p class="text-center">Loading users...</p>
+        </div>
+    </div>
+
+    <script>
+        async function fetchUsers() {
+            try {
+                const response = await fetch('http://localhost:5112/api/admin/users'); // Change URL if needed
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const users = await response.json();
+
+                // Debugging: Print API response to console
+                console.log("Fetched Users:", users);
+
+                if (!users || users.length === 0) {
+                    document.getElementById('userList').innerHTML = '<p class="text-center">No users found.</p>';
+                    return;
+                }
+
+                let userCards = '';
+                users.forEach(user => {
+                    userCards += `
+                        <div class="card">
+                            <img src="${user?.C_Image || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsoEAMYKHiwI5JH_IlxayW3-9UurHlASFy9A&s'}" alt="User Image">
+                            <div class="card-body">
+
+                                <h5>${user?.C_UserName || 'N/A'}</h5>
+                                <p>Email: ${user?.C_Email || 'N/A'}</p>
+                                <p>Mobile: ${user?.C_Mobile || 'N/A'}</p>
+                                <p>Gender: ${user?.C_Gender || 'N/A'}</p>
+                                <p class="status">Status: ${user?.C_Status || 'N/A'}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('userList').innerHTML = userCards;
+            } catch (error) {
+                console.error('Error fetching users:', error);
+                document.getElementById('userList').innerHTML = '<p class="text-center text-danger">Failed to load users.</p>';
+            }
+        }
+
+        fetchUsers(); // Call function to load users
+    </script>
+
+</body>
+
+</html> *@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User List</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            margin-top: 20px;
+        }
+
+        .card-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .card {
+            width: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .card-body {
+            padding: 15px;
+        }
+
+        .card h5 {
+            margin: 10px 0;
+        }
+
+        .status {
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2 class="text-center">User List</h2>
+        <div id="userList" class="card-list">
+            <p class="text-center">Loading users...</p>
+        </div>
+    </div>
+
+    <script>
+        async function fetchUsers() {
+            try {
+                const response = await fetch('http://localhost:5112/api/admin/users'); // Adjust API URL if needed
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const users = await response.json();
+
+                console.log("Fetched Users:", users); // Debugging
+
+                if (!users || users.length === 0) {
+                    document.getElementById('userList').innerHTML = '<p class="text-center">No users found.</p>';
+                    return;
+                }
+
+                let userCards = '';
+                users.forEach(user => {
+                    userCards += `
+                        <div class="card">
+                            <img src="${user.C_Image || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsoEAMYKHiwI5JH_IlxayW3-9UurHlASFy9A&s'}" alt="User Image">
+                            <div class="card-body">
+                                <h5>${user.c_UserName || 'N/A'}</h5>
+                                <p>Email: ${user.c_Email || 'N/A'}</p>
+                                <p>Mobile: ${user.c_Mobile || 'N/A'}</p>
+                                <p>Gender: ${user.c_Gender || 'N/A'}</p>
+                                <p>Address: ${user.c_Address || 'N/A'}</p>
+                                <p class="status">Status: ${user.c_Status || 'N/A'}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('userList').innerHTML = userCards;
+            } catch (error) {
+                console.error('Error fetching users:', error);
+                document.getElementById('userList').innerHTML = '<p class="text-center text-danger">Failed to load users.</p>';
+            }
+        }
+
+        fetchUsers(); // Call function to load users
+    </script>
+
+</body>
+
+</html>
+
