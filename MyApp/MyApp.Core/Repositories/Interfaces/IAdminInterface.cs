@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MyApp.Core.Model;
+using MyApp.Core.Models;
 
 namespace MyApp.Core.Repositories.Interfaces
 {

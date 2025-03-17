@@ -9,6 +9,8 @@ namespace MyApp.Core.Models
     {
         public int c_taskid { get; set; }
         public int c_userid { get; set; }
+        public string? c_userName { get; set; }
+
         public string c_title { get; set; }
         public string c_description { get; set; }
         public int c_estimateddays { get; set; }
