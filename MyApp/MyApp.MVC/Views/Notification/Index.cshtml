@@ -1,0 +1,43 @@
+@model List<MyApp.Core.Models.Notification>
+
+<h2>Notifications</h2>
+
+@if (Model == null || !Model.Any())
+{
+    <p>No notifications available.</p>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (var notification in Model)
+        {
+            <li class="list-group-item @(notification.c_isread ? "list-group-item-light" : "")">
+                @notification.c_title
+                @if (notification.c_taskid.HasValue)
+                {
+                    <span class="text-muted"> (Task Name: @notification.c_title)</span>
+                }
+                @if (!notification.c_isread)
+                {
+                    <button class="btn btn-sm btn-primary float-right mark-as-read" data-id="@notification.c_notificationid">Mark as
+                        Read</button>
+                }
+                <small class="text-muted d-block">Notification ID: @notification.c_notificationid</small>
+            </li>
+        }
+    </ul>
+}
+<script src="https://code.jquery.com/jquery-3.6.4.slim.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('.mark-as-read').click(function () {
+            var notificationId = $(this).data('id');
+            $.post('/Notification/MarkAsRead', { notificationId: notificationId }, function (data) {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        });
+    });
+</script>

@@ -1,20 +1,69 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - MyApp.MVC</title>
+    <title>@ViewData["Title"] - TaskTrackPro</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/MyApp.MVC.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/TaskTrackPro.styles.css" asp-append-version="true" />
+    <style>
+        /* Modern styling for the notification bell and badge */
+        .notification-bell {
+            position: relative;
+            font-size: 1.5rem;
+            /* Larger bell icon */
+            color: #333;
+            /* Dark color for the bell */
+            text-decoration: none;
+            /* Remove underline from link */
+        }
+
+        .notification-bell:hover {
+            color: #007bff;
+            /* Bootstrap primary color on hover */
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            /* Position above the bell */
+            right: -8px;
+            /* Position to the right of the bell */
+            background-color: #dc3545;
+            /* Bootstrap danger color (red) */
+            color: white;
+            font-size: 0.75rem;
+            /* Smaller font for the badge */
+            font-weight: bold;
+            border-radius: 50%;
+            /* Circular badge */
+            min-width: 20px;
+            height: 20px;
+            line-height: 20px;
+            /* Center the number vertically */
+            text-align: center;
+            display: none;
+            /* Hidden by default if count is 0 */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            /* Subtle shadow for depth */
+        }
+
+        .notification-badge.visible {
+            display: inline-block;
+            /* Show when count > 0 */
+        }
+    </style>
 </head>
+
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">MyApp.MVC</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">TaskTrackPro</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
@@ -23,7 +72,15 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home"
+                                asp-action="Privacy">Privacy</a>
+                        </li>
+                        <li class="nav-item">
+
+                            <a class="notification-bell" asp-area="" asp-controller="Notification" asp-action="Index">
+                                <span class="bell-icon">🔔</span>
+                                <span id="unread-count" class="notification-badge">0</span>
+                            </a>
                         </li>
                     </ul>
                 </div>
@@ -38,12 +95,31 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2025 - MyApp.MVC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            © 2025 - TaskTrackPro - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        $(document).ready(function () {
+            updateUnreadCount();
+            setInterval(updateUnreadCount, 10000);
+
+            function updateUnreadCount() {
+                $.getJSON('/Notification/GetUnreadCount', function (data) { // Updated to use NotificationController
+                    $('#unread-count').text(data.count);
+                    // Show or hide the badge based on the count
+                    if (data.count > 0) {
+                        $('#unread-count').addClass('visible');
+                    } else {
+                        $('#unread-count').removeClass('visible');
+                    }
+                });
+            }
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>
