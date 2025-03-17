@@ -1,0 +1,149 @@
+@{
+    Layout = "../Shared/_AdminLayout.cshtml";
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<style>
+    /* Styling for notification container */
+    .notification-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+
+    /* Bell icon */
+    .bell-icon {
+        font-size: 24px;
+        cursor: pointer;
+        position: relative;
+    }
+
+    /* Badge styling */
+    .badge-counter {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: red;
+        color: white;
+        font-size: 12px;
+        padding: 3px 6px;
+        border-radius: 50%;
+        display: none; /* Initially hidden */
+    }
+
+    /* Notification panel */
+    .notification-panel {
+        display: none;
+        position: absolute;
+        top: 35px;
+        right: 0;
+        width: 300px;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        padding: 10px;
+    }
+
+    .notification-panel ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .notification-panel ul li {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .notification-panel ul li:last-child {
+        border-bottom: none;
+    }
+</style>
+
+
+<!-- Notification Bell -->
+<div class="notification-container">
+    <div class="bell-icon" id="notificationBell">
+        🔔
+        <span class="badge-counter" id="notificationCounter">0</span>
+    </div>
+
+    <!-- Notification Panel -->
+    <div class="notification-panel" id="notificationPanel">
+        <h6>Notifications</h6>
+        <ul id="notificationsList"></ul>
+    </div>
+</div>
+
+
+
+<script>
+    $(document).ready(function () {
+        let notificationCount = 0;
+    
+        // Function to fetch notifications
+        function fetchNotifications() {
+            $.get("http://localhost:5286/api/AdminApi/notifications", function (data) {
+                let notificationList = $("#notificationsList");
+                notificationList.empty();
+    
+                if (data.length > 0) {
+                    notificationCount = data.length;
+                    $("#notificationCounter").text(notificationCount).show();
+                } else {
+                    $("#notificationCounter").hide();
+                }
+    
+                data.forEach(notification => {
+                    notificationList.append(`
+                        <li id="notification-${notification.id}">
+                            ${notification.title}
+                            <button class="mark-read-btn btn btn-sm btn-danger" data-id="${notification.id}">✔</button>
+                        </li>
+                    `);
+                });
+            });
+        }
+    
+        // Fetch notifications every 5 seconds
+        setInterval(fetchNotifications, 5000);
+        fetchNotifications();
+    
+        // Toggle notification panel when bell icon is clicked
+        $("#notificationBell").click(function () {
+            $("#notificationPanel").toggle();
+        });
+    
+        // Mark individual notification as read
+        $(document).on("click", ".mark-read-btn", function () {
+            let notificationId = $(this).data("id");
+    
+            $.post(`http://localhost:5286/api/AdminApi/mark-notification-read/${notificationId}`, function () {
+                $(`#notification-${notificationId}`).remove(); // Remove from UI
+    
+                // Update counter
+                notificationCount--;
+                if (notificationCount > 0) {
+                    $("#notificationCounter").text(notificationCount);
+                } else {
+                    $("#notificationCounter").hide();
+                }
+            });
+        });
+    
+        // Close notification panel when clicking outside
+        $(document).click(function (event) {
+            if (!$(event.target).closest('.notification-container').length) {
+                $("#notificationPanel").hide();
+            }
+        });
+    });
+    
+</script>

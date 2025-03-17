@@ -11,22 +11,22 @@ namespace MyApp.MVC.Controllers
     [Route("[controller]")]
     public class AdminController : Controller
     {
-        private readonly ILogger<AdminController> _logger;
-
-        public AdminController(ILogger<AdminController> logger)
+        public ActionResult Index()
         {
-            _logger = logger;
+            return View();
         }
-
-        public IActionResult Index()
+          public ActionResult Notification()
+        {
+            return View();
+        }
+        public ActionResult GetPendingUser()
         {
             return View();
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+         public ActionResult GetDocuments()
         {
-            return View("Error!");
+            return View();
         }
     }
 }

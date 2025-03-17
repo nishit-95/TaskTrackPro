@@ -1,0 +1,153 @@
+
+@{
+    ViewData["Title"] = "Task List";
+    Layout = "../Shared/_AdminLayout.cshtml";
+}
+
+
+
+<div id="userContainer" class="container mt-4">
+    <div class="row" id="userCards"></div>
+</div>
+
+<!-- Alert Box at the Top -->
+<div id="alertBox" class="alert-box d-none position-fixed start-50 translate-middle-x shadow-lg text-center"
+    style="top: 10px; left: 50%; transform: translateX(-50%); z-index: 1050;">
+    <p id="alertMessage" class="mb-0 fw-bold"></p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<style>
+    /* Alert Box Styling */
+    .alert-box {
+        background: #fff;
+        padding: 15px;
+        border-radius: 8px;
+        width: 60%;
+        max-width: 450px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        font-size: 16px;
+        font-weight: bold;
+        text-align: center;
+        border: 3px solid;
+    }
+    .alert-success {
+        border-color: #28a745;
+        color: #28a745;
+    }
+    .alert-danger {
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+    .approve-btn {
+        background-color: #7e57c2 !important;
+        border-color: #7e57c2 !important;
+        color: white !important;
+    }
+    
+    .approve-btn:hover {
+        background-color: #6745b0 !important;
+        border-color: #6745b0 !important;
+    }
+
+    .reject-btn {
+        background-color: #7e57c2 !important;
+        border-color: #7e57c2 !important;
+        color: white !important;
+    }
+
+    .reject-btn:hover {
+        background-color: #6745b0 !important;
+        border-color: #6745b0 !important;
+    }
+</style>
+
+<script>
+    $(document).ready(function () {
+        fetchUsers();
+
+        function fetchUsers() {
+            $.get("http://localhost:5286/api/AdminApi/GetAll", function (users) {
+                let userCards = $("#userCards");
+                userCards.empty(); 
+
+                if (users.length === 0) {
+                    userCards.html("<p class='text-center fw-bold text-danger'>No pending users found.</p>");
+                    return;
+                }
+
+                users.forEach(user => {
+                    let card = `
+                        <div class="col-md-4 mb-3" id="userCard_${user.c_userId}">
+                            <div class="card shadow-lg border rounded-lg">
+                                <img src="${user.c_image || 'default-user.jpg'}" class="card-img-top img-fluid rounded-circle mt-3 mx-auto d-block"
+                                    style="width: 100px; height: 100px; object-fit: cover;">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title fw-bold">${user.c_userName}</h5>
+                                    <p class="card-text"><b>Email:</b> ${user.c_email}</p>
+                                    <p class="card-text"><b>Mobile:</b> ${user.c_mobile}</p>
+                                    <p class="card-text"><b>Address:</b> ${user.c_address}</p>
+                                    <button class="btn btn-success btn-sm approve-btn" data-userid="${user.c_userId}" data-username="${user.c_userName}">
+                                         Approve
+                                    </button>
+                                    <button class="btn btn-danger btn-sm reject-btn" data-userid="${user.c_userId}" data-username="${user.c_userName}">
+                                         Reject
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    userCards.append(card);
+                });
+            });
+        }
+
+        $(document).on("click", ".approve-btn", function () {
+            let userId = $(this).data("userid");
+            let userName = $(this).data("username");
+            updateUserStatus(userId, "Approved", userName, "✅ " + userName + " has been approved! They can now log in.");
+        });
+
+        $(document).on("click", ".reject-btn", function () {
+            let userId = $(this).data("userid");
+            let userName = $(this).data("username");
+            updateUserStatus(userId, "Rejected", userName, "❌ " + userName + " has been rejected. Access is denied.");
+        });
+
+        function updateUserStatus(userId, status, userName, message) {
+            $.ajax({
+                url: "http://localhost:5286/api/AdminApi/UpdateStatus",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ userId: userId, status: status }),
+                success: function () {
+                    showAlert(message, status);
+                    $("#userCard_" + userId).fadeOut(500, function () { $(this).remove(); });
+                },
+                error: function () {
+                    showAlert("⚠️ Error updating user status. Please try again.", "Error");
+                }
+            });
+        }
+
+        function showAlert(message, status) {
+            let alertBox = $("#alertBox");
+            let alertMessage = $("#alertMessage");
+            let alertClass = status === "Approved" ? "alert-success" : "alert-danger";
+
+            alertMessage.html(message);
+            alertBox.removeClass("d-none alert-success alert-danger")
+                .addClass(alertClass)
+                .fadeIn();
+
+            setTimeout(() => {
+                alertBox.fadeOut();
+            }, 3000);
+        }
+    });
+</script>
+
+
+
+

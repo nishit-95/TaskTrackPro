@@ -1,0 +1,66 @@
+@{
+    ViewData["Title"] = "Task List";
+    Layout = "../Shared/_AdminLayout.cshtml";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task List</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Task List</h2>
+        <div class="row" id="taskContainer">
+            <!-- Cards will be inserted here dynamically -->
+        </div>
+    </div>
+
+
+<script>
+    $(document).ready(function () {
+        $.get("http://localhost:5286/api/AdminApi/GetDoc", function (data) {
+            let taskContainer = $("#taskContainer");
+            taskContainer.empty();
+    
+            data.forEach(task => {
+                let fileUrl = `http://localhost:5144/${task.c_document}`;
+                let fileExtension = task.c_document.split('.').pop().toLowerCase();
+    
+                let viewButton = '';
+                if (fileExtension === "pdf") {
+                    viewButton = `<a href="${fileUrl}" target="_blank" class="btn btn-primary">View Document</a>`;
+                } else if (["jpg", "jpeg", "png", "gif"].includes(fileExtension)) {
+                    viewButton = `<a href="${fileUrl}" target="_blank" class="btn btn-primary">View Image</a>`;
+                } else {
+                    viewButton = `<a href="${fileUrl}" target="_blank" class="btn btn-primary">Open File</a>`;
+                }
+    
+                let card = `
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow-lg">
+                            <div class="card-body">
+                                <h5 class="card-title">${task.c_title}</h5>
+                                <p class="card-text">${task.c_description}</p>
+                                <p><strong>Posted by:</strong> ${task.c_userName}</p>
+                                ${viewButton}
+                            </div>
+                        </div>
+                    </div>`;
+    
+                taskContainer.append(card);
+            });
+        }).fail(function () {
+            $("#taskContainer").html("<p class='text-danger'>Failed to load tasks.</p>");
+        });
+    });
+    
+    
+
+    
+</script>
+</body>
+</html>
