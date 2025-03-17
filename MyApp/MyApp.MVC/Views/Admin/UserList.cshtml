@@ -1,3 +1,7 @@
+@{
+    Layout = "../Shared/_AdminLayout.cshtml";
+}
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -68,7 +72,7 @@
         async function fetchUsers() {
             try {
                 const response = await fetch('http://localhost:5112/api/admin/users'); // Adjust API URL if needed
-                
+
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
@@ -112,4 +116,3 @@
 </body>
 
 </html>
-
