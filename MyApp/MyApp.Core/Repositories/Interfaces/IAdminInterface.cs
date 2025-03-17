@@ -14,5 +14,22 @@ namespace MyApp.Core.Repositories.Interfaces
         int GetTotalUsers();
         int GetTotalTasks();
         Task<(int totalUsers, int totalTasks)> GetDashboardStatsAsync();
+
+         Task<List<object>>GetAllUser();
+
+        // admin can assign task to user
+        Task<int>AssignTask(TaskAssign taskAssign);
+
+        // admin can update task to user
+        Task<int>UpdateTask(TaskAssign taskAssign);
+
+        // get all task
+        Task<List<object>>GetAllTask();
+
+        // get task by id
+        Task<object>GetTaskById(int taskId);
+
+        // task delete by id
+        Task<int>DeleteTask(int taskId);
     }
 }

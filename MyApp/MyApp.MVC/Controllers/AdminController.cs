@@ -27,5 +27,10 @@ namespace MyApp.MVC.Controllers
         {
             return View();
         }
+
+        public ActionResult TaskCrud()
+        {
+            return View();
+        }
     }
 }

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using MyApp.Core.Repositories.Interfaces;
 using Npgsql;
 using StackExchange.Redis;
+using MyApp.Core.Models;
 
 namespace MyApp.API.Controllers
 {
@@ -157,6 +158,96 @@ namespace MyApp.API.Controllers
 
             return Ok(new { totalUsers, totalTasks });
         }
+
+
+        // viral
+        
+        [HttpGet("GetAllUser")]
+        public async Task<IActionResult> GetAllUser()
+        {
+            try
+            {
+                var users = await _admin.GetAllUser();
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // admin can assign task to user
+        [HttpPost("AssignTask")]
+        public async Task<IActionResult> AssignTask([FromBody] TaskAssign taskAssign)
+        {
+            try
+            {
+                var result = await _admin.AssignTask(taskAssign);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("UpdateTask")]
+        public async Task<IActionResult> UpdateTask([FromBody] TaskAssign taskAssign)
+        {
+            try
+            {
+                var result = await _admin.UpdateTask(taskAssign);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("GetAllTask")]
+        public async Task<IActionResult> GetAllTask()
+        {
+            try
+            {
+                var tasks = await _admin.GetAllTask();
+                return Ok(tasks);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("GetTaskById/{taskId}")]
+        public async Task<IActionResult> GetTaskById(int taskId)
+        {
+            try
+            {
+                var task = await _admin.GetTaskById(taskId);
+                return Ok(task);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete("DeleteTask/{taskId}")]
+        public async Task<IActionResult> DeleteTask(int taskId)
+        {
+            try
+            {
+                var result = await _admin.DeleteTask(taskId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        
 
     }
 }
