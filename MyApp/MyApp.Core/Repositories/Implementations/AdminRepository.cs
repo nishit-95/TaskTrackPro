@@ -10,8 +10,9 @@ using MyApp.Core.Models;
 using MyApp.Core.Repositories.Interfaces;
 using Npgsql;
 using StackExchange.Redis;
+using MyApp.MVC.Models;
 
-namespace MyApp.MVC.Models
+namespace MyApp.Core.Repositories.Implementations
 {
     public class AdminRepository : IAdminInterface
     {

@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using MyApp.Core.Repositories.Interfaces;
 using Npgsql;
 using StackExchange.Redis;
+using MyApp.MVC.Models;
 
-namespace MyApp.MVC.Models
+namespace MyApp.API.Controllers
 {
     [ApiController]
     [Route("api/admin")]

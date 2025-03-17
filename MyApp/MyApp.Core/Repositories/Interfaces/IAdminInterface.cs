@@ -4,8 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using MyApp.Core.Model;
 using MyApp.Core.Models;
+using MyApp.MVC.Models;
 
-namespace MyApp.MVC.Models
+namespace MyApp.Core.Repositories.Interfaces
 {
     public interface IAdminInterface
     {
