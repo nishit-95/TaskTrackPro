@@ -47,6 +47,18 @@ builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+builder.Services.AddScoped<NpgsqlConnection>((parameter) =>
+{
+    var ConnectionString = parameter.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
+    return new NpgsqlConnection(ConnectionString);
+});
+
+builder.Services.AddSingleton<NpgsqlConnection>((UserRepository) =>
+{
+    var connectionString = UserRepository.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
+    return new NpgsqlConnection(connectionString);
+});
+builder.Services.AddSingleton<IUserProfileInterface, UserProfileRepository>();
 
 var app = builder.Build();
 
@@ -73,7 +85,7 @@ var summaries = new[]
 
 app.MapGet("/weatherforecast", () =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
+    var forecast = Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
         (
             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
@@ -85,7 +97,7 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
-
+app.MapControllers();
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
