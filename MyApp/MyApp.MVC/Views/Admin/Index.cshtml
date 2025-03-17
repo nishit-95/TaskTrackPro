@@ -1,0 +1,105 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "../Shared/_AdminLayout.cshtml";
+}
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    fetch("http://localhost:5112/api/AdminApi/dashboard")
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("totalUsers").innerText = data.totalUsers;
+            document.getElementById("totalTasks").innerText = data.totalTasks;
+        })
+        .catch(error => console.error('Error:', error));
+});
+</script>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card custom-card mb-3 bg-secondary text-white"> <!-- Added custom-card class -->
+                <div class="card-header ">Total Users</div>
+                <div class="card-body">
+                    <h5 class="card-title" id="totalUsers">Loading...</h5>
+                    <p class="card-text">Registered Users in the System</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card custom-card mb-3 bg-secondary text-white"> <!-- Added custom-card class -->
+                <div class="card-header">Total Tasks</div>
+                <div class="card-body">
+                    <h5 class="card-title" id="totalTasks">Loading...</h5>
+                    <p class="card-text">Tasks Assigned in the System</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    fetch("http://localhost:5112/api/AdminApi/dashboard")
+        .then(response => response.json())
+        .then(data => {
+            // Call function to create Users & Tasks Chart
+            createUsersTasksChart(data.totalUsers, data.totalTasks);
+        })
+        .catch(error => console.error('Error:', error));
+});
+
+// Function to create Users & Tasks Chart
+function createUsersTasksChart(totalUsers, totalTasks) {
+    var ctx = document.getElementById('usersTasksChart').getContext('2d');
+    var usersTasksChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Users', 'Tasks'],
+            datasets: [{
+                label: 'Count',
+                data: [totalUsers, totalTasks],
+                backgroundColor: ['#ff6f61', '#007bff'],
+                borderColor: ['#e53935', '#0056b3'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            }
+        }
+    });
+}
+</script>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card custom-card">
+                <div class="card-header">Users & Tasks Chart</div>
+                <div class="card-body">
+                    <canvas id="usersTasksChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -28,6 +28,16 @@
 
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="UserList">User List</a>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Notification">Notification</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="GetDocuments">GetDocuments</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="GetPendingUser">
+                                User <span id="pendingUserCounter" class="badge bg-danger">0</span>
+                            </a>
                         </li>
                     </ul>
                 </div>
@@ -45,6 +55,31 @@
             &copy; 2025 - MyApp.MVC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+    <script>
+        $(document).ready(function () {
+            function fetchPendingUserCount() {
+                $.get("http://localhost:5112/api/AdminApi/pendingUserCount", function (data) {
+                    $("#pendingUserCounter").text(data);
+                    if (data == 0) {
+                        $("#pendingUserCounter").hide();  // Hide badge if no pending users
+                    } else {
+                        $("#pendingUserCounter").show();
+                    }
+                });
+            }
+    
+            // Fetch count on page load
+            fetchPendingUserCount();
+    
+            // Update count every second for real-time update
+            setInterval(fetchPendingUserCount, 1000);
+    
+            // Update count instantly when approving/rejecting users
+            $(document).on("click", ".approve-btn, .reject-btn", function () {
+                setTimeout(fetchPendingUserCount, 500); // Ensure database update reflects in counter
+            });
+        });
+    </script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

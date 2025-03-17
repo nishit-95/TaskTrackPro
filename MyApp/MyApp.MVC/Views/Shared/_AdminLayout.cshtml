@@ -1,0 +1,395 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MyApp.MVC</title>
+      <!--<link rel="shortcut icon" href="../../App_Themes/Default/images/favicon.ico" type="image/x-icon">-->
+
+      <link href="../../App_Themes/Default/css/kendo.common.min.css" rel="stylesheet" />
+      <link href="../../App_Themes/Default/css/kendo.default.min.css" rel="stylesheet" />
+      <link href="../../App_Themes/Default/css/fonts.css" rel="stylesheet" />
+      <link href="../../App_Themes/Default/css/styleguide.css" rel="stylesheet" />
+      <link href="../../App_Themes/Default/css/core-pocket-responsive.css" rel="stylesheet" />
+      <link href="../../App_Themes/Default/css/casepoint.comfortable.css" rel="stylesheet" />
+      <link href="../../App_Themes/Default/css/kendo.Deeppurple.css" rel="stylesheet" />
+  
+      <!-- css -->
+      <link href="../../App_Themes/Default/css/core-pocket.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/MyApp.MVC.styles.css" asp-append-version="true" />
+    <style>
+        /* Notification container inside navbar */
+        .notification-item {
+            position: relative;
+        }
+    
+        /* Counter badge */
+        .counts {
+            position: absolute;
+            top: -5px;
+            right: -10px;
+            font-size: 12px;
+            padding: 3px 6px;
+            border-radius: 50%;
+            display: none; /* Initially hidden */
+        }
+    
+        /* Notification panel */
+        .notification-panel {
+            display: none;
+            position: absolute;
+            top: 40px;
+            right: 0;
+            width: 300px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            z-index: 1000;
+        }
+    
+        .notification-panel ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 200px;
+            overflow-y: auto;
+
+        }
+    
+        .notification-panel ul li {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            color: black !important; /* Ensure text is black */
+            font-weight: bold;
+        }
+    
+        .notification-panel ul li:last-child {
+            border-bottom: none;
+        }
+        #notificationsList li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8f9fa;
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            font-size: 14px;
+            border-left: 4px solid #7e57c2; /* Purple highlight */
+            white-space: nowrap;
+        }
+        
+        .mark-read-btn {
+            background-color: #7e57c2 !important;
+            border: none;
+            color: white;
+            padding: 4px 6px;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px; /* Add space between text and button */
+        }
+        
+        #notificationsList {
+            padding: 0;
+            margin: 0;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        
+    </style>
+    
+</head>
+<body>
+    <!-- <header>
+
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">MyApp.MVC</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Notification">Notification</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="GetDocuments">GetDocuments</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="GetPendingUser">
+                                User <span id="pendingUserCounter" class="badge bg-danger">0</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header> -->
+    <header class="main-header">
+        <nav class="mt-navbar">
+            <div class="nav-left" id="dvLeftMenu" data-role="aratooltipv2">
+                <div class="logo-wrapper">
+                    <img src="../../App_Themes/Default/images/Clarent_White_Logo.svg" />
+                </div>
+                <ul class="left-menu list-unstyled list-inline">
+                    <li class="separator"></li>
+                    <li class="active project-item"><a class="noPointer ellipsis" title="CorePocket">Admin</a></li>
+                </ul>
+            </div>
+            <div class="nav-right">
+                <ul class="user-menu">
+                    <li class="support-mail-wrapper">
+                        <a href="javascript:void(0)" class="help">
+                            <span class="icon"><i class="icon-help"></i></span>
+                        </a>
+                    </li>
+                    <!-- <li class="notification-item item">
+                        <a href="javascript:void(0)">
+                            <span class="icon"><i class="icon-notification"></i></span>
+                            <span class="counts">12</span>
+                        </a>
+                    </li> -->
+
+                    <li class="notification-item item">
+                        <a href="javascript:void(0)" id="notificationBell">
+                            <span class="icon"><i class="icon-notification"></i></span>
+                            <span class="counts badge bg-danger" id="notificationCounter">0</span>
+                        </a>
+                        <!-- Notification Dropdown Panel -->
+                        <div class="notification-panel" id="notificationPanel">
+                            <h6>Notifications</h6>
+                            <ul id="notificationsList"></ul>
+                        </div>
+                    </li>
+                    <li class="separator"></li>
+                    <!-- <li class="userprofile-item userprofile dropdown">
+                        <a href="javascript:void(0)">
+                            <span class="navuser-ellipse">htrada@casepoint.in<br /><small>Space Admin</small></span>
+                            <span class="dw-icon"><i class="icon-arrow-down"></i></span>
+                        </a>
+                    </li> -->
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+     <!--navigation pages-->
+     <nav class="mt-navbar-pages">
+        <ul class="list-inline pages-menu">
+            <li class="active">
+                <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Home</a>
+            </li>
+            <li>
+                <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="">Task</a>
+            </li>
+            <li>
+                <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="UserList">User List</a>
+            </li>
+          
+            <li>
+                <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="GetPendingUser">
+                    User Approval <span id="pendingUserCounter" class="badge bg-danger">0</span>
+                </a>      
+                  </li>
+                  <li>
+                    <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="GetDocuments">User Documents</a>
+                </li>
+        </ul>
+    </nav>
+    <!--#navigation pages-->
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2025 - MyApp.MVC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer> -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        $(document).ready(function () {
+            let notificationCount = 0;
+    
+            // Function to fetch notifications
+            function fetchNotifications() {
+                $.get("http://localhost:5112/api/AdminApi/notifications", function (data) {
+                    let notificationList = $("#notificationsList");
+                    notificationList.empty();
+    
+                    if (data.length > 0) {
+                        notificationCount = data.length;
+                        $("#notificationCounter").text(notificationCount).show();
+                    } else {
+                        $("#notificationCounter").hide();
+                    }
+    
+                    data.forEach(notification => {
+                        notificationList.append(`
+                            <li id="notification-${notification.id}">
+                                ${notification.title}
+                                <button class="mark-read-btn btn btn-sm btn-light" data-id="${notification.id}">✔</button>
+                            </li>
+                        `);
+                    });
+                });
+            }
+    
+            // Fetch notifications every 5 seconds
+            setInterval(fetchNotifications, 5000);
+            fetchNotifications();
+    
+            // Toggle notification panel when bell icon is clicked
+            $("#notificationBell").click(function () {
+                $("#notificationPanel").toggle();
+            });
+    
+            // Mark individual notification as read
+            $(document).on("click", ".mark-read-btn", function () {
+                let notificationId = $(this).data("id");
+    
+                $.post(`http://localhost:5112/api/AdminApi/mark-notification-read/${notificationId}`, function () {
+                    $(`#notification-${notificationId}`).remove(); // Remove from UI
+    
+                    // Update counter
+                    notificationCount--;
+                    if (notificationCount > 0) {
+                        $("#notificationCounter").text(notificationCount);
+                    } else {
+                        $("#notificationCounter").hide();
+                    }
+                });
+            });
+    
+            // Close notification panel when clicking outside
+            $(document).click(function (event) {
+                if (!$(event.target).closest('.notification-item').length) {
+                    $("#notificationPanel").hide();
+                }
+            });
+        });
+    </script>
+    
+    <script>
+        $(document).ready(function () {
+            function fetchPendingUserCount() {
+                $.get("http://localhost:5112/api/AdminApi/pendingUserCount", function (data) {
+                    $("#pendingUserCounter").text(data);
+                    if (data == 0) {
+                        $("#pendingUserCounter").hide();  // Hide badge if no pending users
+                    } else {
+                        $("#pendingUserCounter").show();
+                    }
+                });
+            }
+    
+            // Fetch count on page load
+            fetchPendingUserCount();
+    
+            // Update count every second for real-time update
+            setInterval(fetchPendingUserCount, 1000);
+    
+            // Update count instantly when approving/rejecting users
+            $(document).on("click", ".approve-btn, .reject-btn", function () {
+                setTimeout(fetchPendingUserCount, 500); // Ensure database update reflects in counter
+            });
+        });
+    </script>
+    <script type="text/x-kendo-template" id="thumnail_template">
+        <div class="thumbnail-item">
+            <div class="thumbnail-item-wrapper">
+                <span class="date">02-Feb-21</span>
+                <div class="thumb-img">                   
+                    <img src='../../App_Themes/Default/images/core-pocket/event.jpg' />
+                </div>
+                <div class="thumb-details">
+                   <p class="font-medium text-dark thumb-name">CP Annual</>
+                   <ul class="thum-list">
+                       <li class="text-muted item-list">
+                           <span class="icon"><i class="icon-map"></i></span>
+                            <span class="text">Akshay Nagar 1st block 1st crosss Banglore-560016</span>                           
+                       </li>
+                       <li class="text-muted item-list">
+                        <span class="icon"><i class="icon-clock"></i></span>
+                        <span class="text">05:25 PM</span>
+                       </li>
+                   </ul>
+                    <div class="btn-group bt-1 pt-10 text-center">
+                       <a href="javascript:void(0)" class="btn btn-trans text-primary">More Details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <!-- scripts -->
+    <script src="../../Scripts/Kendo/jquery.min.js"></script>
+    <script src="../../Scripts/Kendo/kendo.all.min.js"></script>
+    <script src="../../Scripts/CLARENT/Other/Custom/Custom.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            $("select:not([multiple])").kendoDropDownList();
+            //Kendo File Upload
+            $("#fileProfileImage").kendoUpload({
+                showFileList: false,
+                multiple: false,
+                localization: { select: 'Select File' }
+            });
+
+            $("#tabstrip").kendoTabStrip({
+                animation: {
+                    open: {
+                        effects: "fadeIn"
+                    }
+                }
+            });
+
+            $("#borederTabstrip").kendoTabStrip({
+                animation: {
+                    open: {
+                        effects: "fadeIn"
+                    }
+                }
+            });
+
+            var dataSource = new kendo.data.DataSource({
+                transport: {
+                    read: {
+                        url: "https://demos.telerik.com/kendo-ui/service/Products",
+                        dataType: "jsonp"
+                    }
+                },
+            });
+
+            $("#thumbnail_grid").kendoListView({
+                dataSource: dataSource,
+                selectable: "multiple",
+                template: kendo.template($("#thumnail_template").html())
+            });
+
+        });
+    </script>
+   
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

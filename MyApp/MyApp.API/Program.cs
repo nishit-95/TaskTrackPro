@@ -1,23 +1,80 @@
+using Elastic.Clients.Elasticsearch;
+using Elastic.Transport;
 using Microsoft.OpenApi.Models;
 using MyApp.Core.Repositories.Implementations;
 using MyApp.Core.Repositories.Interfaces;
+using MyApp.Core.Services;
 using MyApp.MVC.Models;
+using Nest;
 using Npgsql;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
+    .DefaultIndex("tasks")  // Index name in Elasticsearch
+    .PrettyJson()
+    .DisableDirectStreaming();
+
+var client = new ElasticClient(settings);
+builder.Services.AddScoped<ElasticSearchService>();
+
+builder.Services.AddSingleton<IElasticClient>(client);
+builder.Services.AddSingleton<IUserInterface, UserRepository>();
+builder.Services.AddSingleton<NpgsqlConnection>((ServiceProvider) =>
+{
+    var connectionString =
+    ServiceProvider.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
+    return new NpgsqlConnection(connectionString);
+});
+
+builder.Services.AddSingleton(provider =>
+{
+    var configuration = builder.Configuration;
+    var settings = new ElasticsearchClientSettings(new Uri(configuration["Elasticsearch:Uri"]))
+                    .ServerCertificateValidationCallback(CertificateValidations.AllowAll)
+                    .DefaultIndex(configuration["Elasticsearch:DefaultIndex"])
+                    .Authentication(new
+                        BasicAuthentication(configuration["Elasticsearch:Username"],
+                        configuration["Elasticsearch:Password"]
+                        )).DisableDirectStreaming();
+    return new ElasticsearchClient(settings);
+});
+builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
+{
+    builder.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
+}));
+
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddControllers();
 builder.Services.AddScoped<NpgsqlConnection>((parameter) =>
 {
     var ConnectionString = parameter.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
     return new NpgsqlConnection(ConnectionString);
 });
 
-builder.Services.AddScoped<IUserProfileInterface, UserProfileRepository>();
+
+
+builder.Services.AddSingleton<NpgsqlConnection>((UserRepository) =>
+{
+    var connectionString = UserRepository.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
+    return new NpgsqlConnection(connectionString);
+});
+builder.Services.AddSingleton<IUserProfileInterface, UserProfileRepository>();
+builder.Services.AddSingleton<IAdminInterface, AdminRepository>();
+builder.Services.AddSingleton<IUserInterface, UserRepository>();
+var services = builder.Services;
+services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configuration = builder.Configuration.GetConnectionString("RedisConnection");
+    return ConnectionMultiplexer.Connect(configuration);
+});
+
+// Register your repository
+services.AddSingleton<IAdminInterface, AdminRepository>();
 
 // ✅ Configure Swagger (for API testing)
 builder.Services.AddEndpointsApiExplorer();
@@ -30,7 +87,7 @@ builder.Services.AddSwaggerGen(c =>
 var connectionString = "Host=cipg01;Port=5432;Username=postgres;Password=123456;Database=Group_E_TaskTrack";
 
 // ✅ Register Repository & Service for Dependency Injection
-builder.Services.AddSingleton<IAdminInterface>(new AdminRepository(connectionString));
+// builder.Services.AddSingleton<IAdminInterface>(new AdminRepository(connectionString));
 
 // ✅ Configure CORS Policy (Fixes Fetch Errors)
 builder.Services.AddCors(options =>
@@ -64,12 +121,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
 
-app.UseRouting();
-
-// ✅ Apply CORS Policy (Fixes Fetch Errors)
-app.UseCors("AllowAllOrigins");
+var summaries = new[]
+{
+    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+};
 
 app.UseAuthorization();
 
