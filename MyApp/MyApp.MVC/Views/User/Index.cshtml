@@ -21,6 +21,7 @@
   <link href="../../App_Themes/Default/css/core-pocket-responsive.css" rel="stylesheet" />
   <link href="../../App_Themes/Default/css/casepoint.comfortable.css" rel="stylesheet" />
   <link href="../../App_Themes/Default/css/kendo.Deeppurple.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
 
   <!-- css -->
   <link href="../../App_Themes/Default/css/core-pocket.css" rel="stylesheet" />
@@ -73,7 +74,7 @@
           <li class="userprofile-item userprofile dropdown">
             <a href="javascript:void(0)">
               <!-- here the logged in users Details -->
-              <span class="navuser-ellipse" id="lblemail1"><br /><small>Space Admin</small></span>
+              <span class="navuser-ellipse" id="lblusername1"></span>
               <span class="dw-icon"><i class="icon-arrow-down"></i></span>
             </a>
           </li>
@@ -97,7 +98,7 @@
   <div class="userprofile-menu dropdown-menu">
     <div class="usermenu-wrap">
       <div class="main-up">
-        <div class="userprofile-content-wrapper">
+        <div class="userprofile-content">
           <div class="brief">
             <div class="img-circle"><span>NP</span></div>
           </div>
@@ -111,35 +112,54 @@
               <span class="userprofile-info-icon"><i class="icon-user"></i></span>
               <div class="flex-1 overflow-hidden font-semi-bold ml-15">
                 <span class="text-muted d-block ellipsis mb-5">Username</span>
-                <span class="text-dark d-block ellipsis fs-15">subhash.dudhat@casepoint.in</span>
+                <span class="text-dark d-block ellipsis fs-15" id="lblusername"></span>
               </div>
             </div>
-            <div class="userprofile-info d-flex align-items-center">
+            @* <div class="userprofile-info d-flex align-items-center">
               <span class="userprofile-info-icon"><i class="icon-user"></i></span>
               <div class="flex-1 overflow-hidden font-semi-bold ml-15">
                 <span class="text-muted d-block ellipsis mb-5">Full Name</span>
                 <span class="text-dark d-block ellipsis fs-15">Subhash Dudhat</span>
               </div>
-            </div>
+            </div> *@
             <div class="userprofile-info d-flex align-items-center">
               <span class="userprofile-info-icon"><i class="icon-email"></i></span>
               <div class="flex-1 overflow-hidden font-semi-bold ml-15">
                 <span class="text-muted d-block ellipsis mb-5">Email</span>
-                <span class="text-dark d-block ellipsis fs-15">subhash.dudhat@casepoint.in</span>
+                <span class="text-dark d-block ellipsis fs-15" id="lblemail"></span>
               </div>
             </div>
+
+
             <div class="userprofile-info d-flex align-items-center">
               <span class="userprofile-info-icon"><i class="icon-mobile"></i></span>
               <div class="flex-1 overflow-hidden font-semi-bold ml-15">
                 <span class="text-muted d-block ellipsis mb-5">Phone Number</span>
-                <span class="text-dark d-block ellipsis fs-15">+91 9979692357</span>
+                <span class="text-dark d-block ellipsis fs-15" id="lblmobile"></span>
               </div>
             </div>
+
+
+            <div class="userprofile-info d-flex align-items-center">
+              <span class="userprofile-info-icon"><i class="icon-location"></i></span>
+              <div class="flex-1 overflow-hidden font-semi-bold ml-15">
+                <span class="text-muted d-block ellipsis mb-5">Address</span>
+                <span class="text-dark d-block ellipsis fs-15" id="lbladdress"></span>
+              </div>
+            </div>
+            <div class="userprofile-info d-flex align-items-center">
+              <span class="userprofile-info-icon"><i class="bi bi-gender-ambiguous"></i></span>
+              <div class="flex-1 overflow-hidden font-semi-bold ml-15">
+                <span class="text-muted d-block ellipsis mb-5">Gender</span>
+                <span class="text-dark d-block ellipsis fs-15" id="lblgender"></span>
+              </div>
+            </div>
+
             <div class="userprofile-info d-flex align-items-center">
               <span class="userprofile-info-icon"><i class="icon-assign-role"></i></span>
               <div class="flex-1 overflow-hidden font-semi-bold ml-15">
                 <span class="text-muted d-block ellipsis mb-5">User Role</span>
-                <span class="text-dark d-block ellipsis fs-15">Scrum</span>
+                <span class="text-dark d-block ellipsis fs-15" id="lblrole"></span>
               </div>
             </div>
           </div>
@@ -294,6 +314,7 @@
   <script>
     $(document).ready(function () {
       var email = "v@gmail.com";
+      LoadProfile(email);
       console.log(email);
       console.log("Before loading profile...");
       function LoadProfile(email) {
@@ -307,11 +328,15 @@
             if (data != null) {
               console.log("data is not null");
               $("#userid").val(data.c_userid);
-              $("#lblemail1").text(data.c_fname + " " + data.c_lname);
-              $("#lblemail").text(data.c_email);
-              $("#lblfullname").text(data.c_fname + " " + data.c_lname);
-              $("#lbluname").text(data.c_email);
-              $("#lblmobile").text(data.c_mobileno);
+
+              $("#lblusername").text(data.c_UserName);
+              $("#lblusername1").text(data.c_UserName);
+              $("#lblemail").text(data.c_Email);
+              $("#lblmobile").text(data.c_Mobile);
+              $("#lblrole").text(data.c_Role);
+              $("#lbladdress").text(data.c_Address);
+              $("#lblgender").text(data.c_Gender);
+
               $("#txtuname").val(data.c_email);
               $("#txtfname").val(data.c_fname);
               $("#txtlname").val(data.c_lname);
@@ -343,7 +368,7 @@
       }
 
 
-console.log("After loading profile...");
+      console.log("After loading profile...");
 
 
 
