@@ -7,9 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.17.2" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.13" />
+<<<<<<< HEAD
     <PackageReference Include="StackExchange.Redis" Version="2.8.31" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+=======
+    <PackageReference Include="npgsql" Version="9.0.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
+>>>>>>> 26d61296c98f802857477c3c6dd78bf4ec6fb3d6
   </ItemGroup>
 
   <ItemGroup>
