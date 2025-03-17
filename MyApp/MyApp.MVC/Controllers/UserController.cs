@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MyApp.MVC.Controllers
 {
-    [Route("[controller]")]
+    // [Route("[controller]")]
     public class UserController : Controller
     {
         private readonly ILogger<UserController> _logger;
@@ -19,6 +19,11 @@ namespace MyApp.MVC.Controllers
         }
 
         public IActionResult Index()
+        {
+            return View();
+        }
+
+        public IActionResult Chat()
         {
             return View();
         }
