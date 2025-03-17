@@ -78,6 +78,8 @@ services.AddSingleton<IConnectionMultiplexer>(sp =>
 
 // Register your repository
 services.AddSingleton<IAdminInterface, AdminRepository>();
+builder.Services.AddSingleton<RabbitMQService>();
+builder.Services.AddHostedService<RabbitMQConsumerService>();
 
 var app = builder.Build();
 
