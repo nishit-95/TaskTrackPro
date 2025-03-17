@@ -9,12 +9,9 @@ using MyApp.MVC.Models;
 namespace MyApp.API.Controllers
 {
     [ApiController]
-    [Route("api/admin")]
+    [Route("api/AdminApi")]
     public class AdminApiController : ControllerBase
     {
-
-        //private readonly string _connectionString = "Host=cipg01;Port=5432;Username=postgres;Password=123456;Database=Group_E_TaskTrack";
-
         private readonly IAdminInterface _admin;
         private readonly ConnectionMultiplexer _redis;
         private readonly string _connectionString;
@@ -55,17 +52,13 @@ namespace MyApp.API.Controllers
             return Ok(users); // ✅ Returns JSON response (fixes StackOverflow)
         }
 
-
-
-
         public AdminApiController(IConfiguration configuration, IAdminInterface admin)
         {
-
             _admin = admin;
             _connectionString = configuration.GetConnectionString("pgconn");
-
-
         }
+
+
         [HttpGet]
         [Route("GetAll")]
         public async Task<IActionResult> GetAll()

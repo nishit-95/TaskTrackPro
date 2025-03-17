@@ -10,7 +10,17 @@ namespace MyApp.MVC.Controllers
 {
     public class AdminController : Controller
     {
-          public ActionResult Notification()
+        public ActionResult Notification()
+        {
+            return View();
+        }
+
+        public ActionResult GetDocuments()
+        {
+            return View();
+        }
+
+        public ActionResult GetPendingUser()
         {
             return View();
         }
