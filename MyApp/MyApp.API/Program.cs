@@ -9,6 +9,11 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
+{
+    builder.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin();
+}));
+
 builder.Services.AddScoped<NpgsqlConnection>((parameter) =>
 {
     var ConnectionString = parameter.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
@@ -48,6 +53,7 @@ app.MapGet("/weatherforecast", () =>
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 app.MapControllers();
+app.UseCors("corsapp");
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
