@@ -8,6 +8,8 @@ namespace MyApp.Core.Repositories.Interfaces
 {
     public interface IUserInterface
     {
-        // Task<List<t_task_user>> GetTaskByUserId(string userId);
+        Task<List<t_task_user>> GetTaskByUserId(int userId);
+        
+        Task<int> UpdateStatus(int taskId);
     }
 }

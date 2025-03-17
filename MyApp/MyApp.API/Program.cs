@@ -14,6 +14,7 @@ builder.Services.AddScoped<NpgsqlConnection>((parameter) =>
     var ConnectionString = parameter.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
     return new NpgsqlConnection(ConnectionString);
 });
+// builder.Services.AddScoped<>
 builder.Services.AddScoped<IUserInterface, UserRepository>();
 
 var app = builder.Build();
