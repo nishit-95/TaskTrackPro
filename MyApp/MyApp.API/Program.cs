@@ -5,6 +5,7 @@ using MyApp.Core.Repositories.Interfaces;
 using MyApp.Core.Services;
 using Nest;
 using Npgsql;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,12 +54,25 @@ builder.Services.AddScoped<NpgsqlConnection>((parameter) =>
     return new NpgsqlConnection(ConnectionString);
 });
 
+
+
 builder.Services.AddSingleton<NpgsqlConnection>((UserRepository) =>
 {
     var connectionString = UserRepository.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
     return new NpgsqlConnection(connectionString);
 });
 builder.Services.AddSingleton<IUserProfileInterface, UserProfileRepository>();
+builder.Services.AddSingleton<IAdminInterface, AdminRepository>();
+builder.Services.AddSingleton<IUserInterface, UserRepository>();
+var services = builder.Services;
+services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configuration = builder.Configuration.GetConnectionString("RedisConnection");
+    return ConnectionMultiplexer.Connect(configuration);
+});
+
+// Register your repository
+services.AddSingleton<IAdminInterface, AdminRepository>();
 
 var app = builder.Build();
 

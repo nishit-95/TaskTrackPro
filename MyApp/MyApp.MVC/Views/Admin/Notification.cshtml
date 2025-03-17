@@ -90,7 +90,7 @@
     
         // Function to fetch notifications
         function fetchNotifications() {
-            $.get("http://localhost:5286/api/AdminApi/notifications", function (data) {
+            $.get("http://localhost:5112/api/AdminApi/notifications", function (data) {
                 let notificationList = $("#notificationsList");
                 notificationList.empty();
     
@@ -125,7 +125,7 @@
         $(document).on("click", ".mark-read-btn", function () {
             let notificationId = $(this).data("id");
     
-            $.post(`http://localhost:5286/api/AdminApi/mark-notification-read/${notificationId}`, function () {
+            $.post(`http://localhost:5112/api/AdminApi/mark-notification-read/${notificationId}`, function () {
                 $(`#notification-${notificationId}`).remove(); // Remove from UI
     
                 // Update counter

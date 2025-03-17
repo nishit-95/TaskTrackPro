@@ -68,7 +68,7 @@
         fetchUsers();
 
         function fetchUsers() {
-            $.get("http://localhost:5286/api/AdminApi/GetAll", function (users) {
+            $.get("http://localhost:5112/api/AdminApi/GetAll", function (users) {
                 let userCards = $("#userCards");
                 userCards.empty(); 
 
@@ -117,7 +117,7 @@
 
         function updateUserStatus(userId, status, userName, message) {
             $.ajax({
-                url: "http://localhost:5286/api/AdminApi/UpdateStatus",
+                url: "http://localhost:5112/api/AdminApi/UpdateStatus",
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({ userId: userId, status: status }),

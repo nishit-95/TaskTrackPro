@@ -6,7 +6,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    fetch("http://localhost:5286/api/AdminApi/dashboard")
+    fetch("http://localhost:5112/api/AdminApi/dashboard")
         .then(response => response.json())
         .then(data => {
             document.getElementById("totalUsers").innerText = data.totalUsers;
@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    fetch("http://localhost:5286/api/AdminApi/dashboard")
+    fetch("http://localhost:5112/api/AdminApi/dashboard")
         .then(response => response.json())
         .then(data => {
             // Call function to create Users & Tasks Chart

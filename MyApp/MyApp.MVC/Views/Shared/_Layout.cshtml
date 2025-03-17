@@ -55,7 +55,7 @@
     <script>
         $(document).ready(function () {
             function fetchPendingUserCount() {
-                $.get("http://localhost:5286/api/AdminApi/pendingUserCount", function (data) {
+                $.get("http://localhost:5112/api/AdminApi/pendingUserCount", function (data) {
                     $("#pendingUserCounter").text(data);
                     if (data == 0) {
                         $("#pendingUserCounter").hide();  // Hide badge if no pending users

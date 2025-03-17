@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 
 namespace MyApp.MVC.Controllers
 {
-    [Route("[controller]")]
     public class AdminController : Controller
     {
         public ActionResult Index()
