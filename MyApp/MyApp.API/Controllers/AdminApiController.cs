@@ -6,6 +6,7 @@ using Npgsql;
 using StackExchange.Redis;
 using MyApp.Core.Models;
 using MyApp.MVC.Models;
+using MyApp.Core.Services;
 
 namespace MyApp.API.Controllers
 {
@@ -13,9 +14,20 @@ namespace MyApp.API.Controllers
     [Route("api/AdminApi")]
     public class AdminApiController : ControllerBase
     {
+        private readonly IRabbitMQService rabbitMQService;
+        private readonly IRedisService redisService;
         private readonly IAdminInterface _admin;
         private readonly ConnectionMultiplexer _redis;
         private readonly string _connectionString;
+
+
+        public AdminApiController(IConfiguration configuration, IAdminInterface admin, IRabbitMQService _rabbitMQService, IRedisService _redisService)
+        {
+            _admin = admin;
+            this.rabbitMQService = _rabbitMQService;
+            this.redisService = _redisService;
+            _connectionString = configuration.GetConnectionString("pgconn");
+        }
 
         // ✅ GET: api/admin/users - Returns JSON list of users
         [HttpGet("users")]
@@ -53,11 +65,6 @@ namespace MyApp.API.Controllers
             return Ok(users); // ✅ Returns JSON response (fixes StackOverflow)
         }
 
-        public AdminApiController(IConfiguration configuration, IAdminInterface admin)
-        {
-            _admin = admin;
-            _connectionString = configuration.GetConnectionString("pgconn");
-        }
 
 
         [HttpGet]
@@ -193,7 +200,7 @@ namespace MyApp.API.Controllers
 
 
         // viral
-        
+
         [HttpGet("GetAllUser")]
         public async Task<IActionResult> GetAllUser()
         {
@@ -279,7 +286,63 @@ namespace MyApp.API.Controllers
             }
         }
 
+
+
+        [HttpPost("send")]
+        public async Task<IActionResult> SendMessage([FromQuery] string queueName, [FromQuery] string Receiver, [FromBody] string message)
+        {
+            if (string.IsNullOrEmpty(message))
+            {
+                return BadRequest("Message cannot be null or empty.");
+            }
+            if (string.IsNullOrEmpty(Receiver))
+            {
+                return BadRequest("Receiver cannot be null or empty.");
+            }
+            if (string.IsNullOrEmpty(queueName))
+            {
+                return BadRequest("Sender cannot be null or empty.");
+            }
+
+            // Apde ahiya redis ma message store karvaye chiye with the help of message key which will be unique for each message
+            string redisKey = $"message:{Receiver}:{Guid.NewGuid()}";
+            redisService.Set(redisKey, message);
+
+            // Ane aee unique key data base ma store karavye chiye 
+            // int senderId = await userInterface.GetUserId(queueName);
+            int senderId = 0;
+            int receiverId = 0;
+            // int receiverId = await userInterface.GetUserId(Receiver);
+            int result = await _admin.Add_Message(senderId, queueName, receiverId, Receiver, redisKey);
+            // Console.WriteLine("Result : " + result);
+
+            // Get the sender's username (you can pass this from the frontend or use the session)
+            var receiver = Receiver; // Or use session/context to get the sender's username
+            // Console.WriteLine($"Sender: {receiver}");
+
+            // Send the message with the sender's username
+            rabbitMQService.SendMessage(queueName, receiver, message);
+            return Ok("Message sent successfully, and saved in Redis with key : " + redisKey);
+        }
+
         
+
+        [HttpGet("receive")]
+        public async Task<IActionResult> ReceiveMessage([FromQuery] string queueName, [FromQuery] string redisKey)
+        {
+            var (sender, message) = rabbitMQService.ReceiveMessage(queueName);
+            if (sender == null || message == null)
+            {
+                return NotFound("No messages available.");
+            }
+            string result = await redisService.Get(redisKey);
+            // Console.WriteLine("Result : " + result);
+
+            // Return a structured response
+            return Ok(new { Sender = sender, Message = message });
+        }
+
+
 
     }
 }

@@ -16,17 +16,28 @@ var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
     .PrettyJson()
     .DisableDirectStreaming();
 
+
+
 var client = new ElasticClient(settings);
 builder.Services.AddScoped<ElasticSearchService>();
 
 builder.Services.AddSingleton<IElasticClient>(client);
 builder.Services.AddSingleton<IUserInterface, UserRepository>();
-builder.Services.AddSingleton<NpgsqlConnection>((ServiceProvider) =>
+builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
+builder.Services.AddSingleton<IRedisService, RedisService>();   
+builder.Services.AddScoped<IUserProfileInterface, UserProfileRepository>();
+builder.Services.AddScoped<IAdminInterface, AdminRepository>();
+
+
+
+builder.Services.AddScoped<NpgsqlConnection>((ServiceProvider) =>
 {
     var connectionString =
     ServiceProvider.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
     return new NpgsqlConnection(connectionString);
 });
+
+
 
 builder.Services.AddSingleton(provider =>
 {
@@ -40,10 +51,8 @@ builder.Services.AddSingleton(provider =>
                         )).DisableDirectStreaming();
     return new ElasticsearchClient(settings);
 });
-builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
-{
-    builder.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
-}));
+
+
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -53,24 +62,19 @@ builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 {
     builder.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin();
 }));
+builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
+{
+    builder.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
+}));
+
+
 
 builder.Services.AddControllers();
-builder.Services.AddScoped<NpgsqlConnection>((parameter) =>
-{
-    var ConnectionString = parameter.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
-    return new NpgsqlConnection(ConnectionString);
-});
 
 
 
-builder.Services.AddSingleton<NpgsqlConnection>((UserRepository) =>
-{
-    var connectionString = UserRepository.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
-    return new NpgsqlConnection(connectionString);
-});
-builder.Services.AddSingleton<IUserProfileInterface, UserProfileRepository>();
-builder.Services.AddSingleton<IAdminInterface, AdminRepository>();
-builder.Services.AddSingleton<IUserInterface, UserRepository>();
+
+
 var services = builder.Services;
 services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
@@ -78,8 +82,31 @@ services.AddSingleton<IConnectionMultiplexer>(sp =>
     return ConnectionMultiplexer.Connect(configuration);
 });
 
+builder.Services.AddSingleton<IConnectionMultiplexer>(provider =>
+{
+    var configuration = provider.GetRequiredService<IConfiguration>();
+    var redisConnectionString = configuration["Redis:ConnectionString"];
+    return ConnectionMultiplexer.Connect(redisConnectionString);
+});
+
+
+
+builder.Services.AddSingleton<IDatabase>(provider =>
+{
+    var multiplexer = provider.GetRequiredService<IConnectionMultiplexer>();
+    return multiplexer.GetDatabase();
+});
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = "localhost:6379"; // Redis Server Address
+    options.InstanceName = "Session_"; // Prefix for session keys in Redis
+});
+
+
+
+
+
 // Register your repository
-services.AddSingleton<IAdminInterface, AdminRepository>();
 builder.Services.AddSingleton<RabbitMQService>();
 builder.Services.AddHostedService<RabbitMQConsumerService>();
 
@@ -106,6 +133,11 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
+
+
+
+
+
 
 // ✅ Build app
 var app = builder.Build();

@@ -13,6 +13,7 @@ namespace MyApp.Core.Repositories.Interfaces
         List<User> GetAllUsers();
         Task<List<t_user>> GetAll();
         Task<List<t_task>> GetTaskDocument();
+        Task<int> Add_Message(int senderId, string senderName, int receiverId, string receiverName, string messageKey);
         int GetTotalUsers();
         int GetTotalTasks();
         Task<(int totalUsers, int totalTasks)> GetDashboardStatsAsync();

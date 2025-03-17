@@ -389,5 +389,35 @@ namespace MyApp.Core.Repositories.Implementations
                     await _conn.CloseAsync();
             }
         }
+
+        public async Task<int> Add_Message(int SenderId, string senderName, int ReceiverId, string receiverName, string messageKey)
+        {
+            Console.WriteLine(senderName + " " + receiverName + " " + messageKey);
+            try
+            {
+                int senderId = SenderId, receiverId = ReceiverId;
+                using (NpgsqlCommand cmd = new NpgsqlCommand("Insert into t_message(c_senderid, c_receiverid, c_sendername, c_receivername, c_message_key) values(@senderId, @receiverId, @sendername, @receivername,  @messageKey)", _conn))
+                {
+                    cmd.Parameters.AddWithValue("@senderId", senderId);
+                    cmd.Parameters.AddWithValue("@receiverId", receiverId);
+                    cmd.Parameters.AddWithValue("@sendername", senderName);
+                    cmd.Parameters.AddWithValue("@receivername", receiverName);
+                    cmd.Parameters.AddWithValue("@messageKey", messageKey);
+                    await _conn.OpenAsync();
+                    await cmd.ExecuteNonQueryAsync();
+                    await _conn.CloseAsync();
+                }
+                Console.WriteLine("Sender Id: " + senderId + " Receiver Id: " + receiverId + "Sender name : " + senderName + " Receiver name : " + receiverName + " Message Key : " + messageKey);
+
+                return 1;
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error occurred while adding message to the database in user repository." + ex.Message);
+                return 0;
+            }
+        }
+
     }
 }
