@@ -10,6 +10,6 @@ namespace MyApp.API.Controllers
     [Route("api/[controller]")]
     public class UserApiController : ControllerBase
     {
-        
+                        
     }
 }

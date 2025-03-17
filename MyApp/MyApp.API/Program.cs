@@ -1,9 +1,21 @@
+using MyApp.Core.Repositories.Implementations;
+using MyApp.Core.Repositories.Interfaces;
+using Npgsql;
+
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddControllers();
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddSingleton<NpgsqlConnection>((UserRepository) =>
+{
+    var connectionString = UserRepository.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
+    return new NpgsqlConnection(connectionString);
+});
+builder.Services.AddSingleton<IUserProfileInterface, UserProfileRepository>();
 
 var app = builder.Build();
 
@@ -23,7 +35,7 @@ var summaries = new[]
 
 app.MapGet("/weatherforecast", () =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
+    var forecast = Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
         (
             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
@@ -35,7 +47,7 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
-
+app.MapControllers();
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
