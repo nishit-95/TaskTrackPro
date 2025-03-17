@@ -80,6 +80,8 @@ services.AddSingleton<IConnectionMultiplexer>(sp =>
 
 // Register your repository
 services.AddSingleton<IAdminInterface, AdminRepository>();
+builder.Services.AddSingleton<RabbitMQService>();
+builder.Services.AddHostedService<RabbitMQConsumerService>();
 
 // ✅ Configure Swagger (for API testing)
 builder.Services.AddEndpointsApiExplorer();

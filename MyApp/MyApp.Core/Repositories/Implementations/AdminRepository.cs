@@ -102,12 +102,16 @@ namespace MyApp.Core.Repositories.Implementations
 
             string query = @"
         SELECT 
+         t.c_taskid, 
             t.c_title, 
             t.c_description, 
             t.c_document, 
+            t.c_status, 
+
             u.c_userName 
         FROM t_task t
-        INNER JOIN t_user u ON t.c_userid = u.c_userid";
+        INNER JOIN t_user u ON t.c_userid = u.c_userid
+         WHERE t.c_document IS NOT NULL";
 
             using (NpgsqlCommand cmd = new NpgsqlCommand(query, _conn))
             {
