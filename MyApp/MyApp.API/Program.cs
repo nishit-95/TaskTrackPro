@@ -1,7 +1,10 @@
+using MyApp.Core.Repositories.Implementations;
+using MyApp.Core.Repositories.Interfaces;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddControllers();
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -11,6 +14,7 @@ builder.Services.AddScoped<NpgsqlConnection>((parameter) =>
     var ConnectionString = parameter.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
     return new NpgsqlConnection(ConnectionString);
 });
+builder.Services.AddScoped<IUserInterface, UserRepository>();
 
 var app = builder.Build();
 
@@ -42,6 +46,7 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
+app.MapControllers();
 
 app.Run();
 
