@@ -26,12 +26,12 @@ builder.Services.AddSingleton<IElasticClient>(client);
 
 builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
 builder.Services.AddSingleton<IRedisService, RedisService>();
-builder.Services.AddScoped<IUserProfileInterface, UserProfileRepository>();
-builder.Services.AddScoped<IAdminInterface, AdminRepository>();
+builder.Services.AddSingleton<IUserProfileInterface, UserProfileRepository>();
+builder.Services.AddSingleton<IAdminInterface, AdminRepository>();
 
 // Add this line with your other service registrations
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IUserInterface, UserRepository>();
+builder.Services.AddSingleton<IEmailService, EmailService>();
+builder.Services.AddSingleton<IUserInterface, UserRepository>();
 
 
 

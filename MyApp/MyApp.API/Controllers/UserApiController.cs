@@ -14,7 +14,6 @@ using Npgsql;
 namespace MyApp.API.Controllers
 {
     [ApiController]
-    [Route("api/tasks")]
     [Route("api/[controller]")]
     public class UserApiController : ControllerBase
     {
@@ -219,7 +218,7 @@ namespace MyApp.API.Controllers
 
         [HttpPost]
         [Route("Login")]
-        public async Task<IActionResult> Login([FromBody] vm_Login user)
+        public async Task<IActionResult> Login([FromForm] vm_Login user)
         {
             if (!ModelState.IsValid)
             {
