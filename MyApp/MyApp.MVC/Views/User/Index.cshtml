@@ -355,6 +355,63 @@
   <script>
 
     $(document).ready(function () {
+      var email = "v@gmail.com";
+     
+      LoadProfile(email);
+      console.log(email);
+      console.log("Before loading profile...");
+      function LoadProfile(email) {
+        console.log("Loading profile..." + email);
+        $.ajax({
+          url: "http://localhost:5112/api/UserProfileApi/getuserdata?email=" + email,
+          method: "GET",
+          success: function (data) {
+            console.log(data);
+            if (data != null) {
+              console.log("data is not null");
+              $("#userid").val(data.c_userid);
+
+              $("#lblusername").text(data.c_UserName);
+              $("#lblusername1").text(data.c_UserName);
+              $("#lblemail").text(data.c_Email);
+              $("#lblmobile").text(data.c_Mobile);
+              $("#lblrole").text(data.c_Role);
+              $("#lbladdress").text(data.c_Address);
+              $("#lblgender").text(data.c_Gender);
+
+              $("#txtuname").val(data.c_email);
+              $("#txtfname").val(data.c_fname);
+              $("#txtlname").val(data.c_lname);
+              $("#txtemail").val(data.c_email);
+              $("#txtmobile").val(data.c_mobileno);
+              // Updating profile image if available
+              if (data.c_userprofile) {
+                $(".ImgDiv").css("display", "block");
+                $(".profileLetterDiv").css("display", "none");
+                $("#ViewProfileImage").attr('src', '/photo/' + data.c_userprofile);
+                $("#EditProfileImage").attr('src', '/photo/' + data.c_userprofile);
+              } else {
+                $(".ImgDiv").css("display", "block");
+                $(".profileLetterDiv").css("display", "none");
+                var defaultImagePath = "/LogoImage/image.png"; // Path relative to your application's URL
+                $("#ViewProfileImage").attr('src', defaultImagePath);
+                $("#EditProfileImage").attr('src', defaultImagePath);
+
+              }
+
+            } else {
+              console.log("User profile data not found.");
+            }
+          },
+          error: function (err) {
+            console.log("Error fetching user profile data:", err);
+          }
+        });
+      }
+
+
+      console.log("After loading profile...");
+
 
       setTimeout(function () {
         $("#load_screen").hide();
@@ -408,10 +465,10 @@
     $("#taskList").kendoGrid({
       dataSource: {
         transport: {
-          read: {
-            url: "http://localhost:5112/api/tasks/GetTaskByUserId/1",  // 🔹 Replace with your API endpoint
-            dataType: "json" // Expect JSON response
-          }
+            read: {
+                url: "http://localhost:5112/api/tasks/GetTaskByUserId/1",  // 🔹 Replace with your API endpoint
+                dataType: "json" // Expect JSON response
+            }
         },
         schema: {
           model: {
@@ -440,27 +497,29 @@
         { field: "c_Enddate", title: "End Date", width: "200px", format: "{0:MM/dd/yyyy}" },
         { field: "c_Status", title: "Status", width: "200px", template: "#= c_Status == 'Completed' ? '✅ Done' : '⏳ Pending' #" },
         {
-          title: "Mark As Done",
-          template: `<button class='k-button k-button-solid-error' onclick='UpdateStatus(#=c_Taskid#,#=c_Userid#)'>✔ Complete</button>`,
-          width: 150
+            title: "Mark As Done",
+            template: `<button class='k-button k-button-solid-error' onclick='UpdateStatus(#=c_Taskid#,#=c_Userid#)'>✔ Complete</button>`,
+            width: 150
         }
-      ]
+    ]
+  });
+  function UpdateStatus(taskid,userid)
+  {
+    console.log(taskid);
+    $.ajax({
+      url: "http://localhost:5112/api/tasks/UpdateStatus/" + taskid + "/" + userid,
+      type: "GET",
+      contentType:false,
+      processData:false,
+      success:function(response)
+      {
+        window.location.reload();
+      },
+      error: function (xhr, status, error) {
+        console.log("there was some error while Updating status");
+      }
     });
-    function UpdateStatus(taskid, userid) {
-      console.log(taskid);
-      $.ajax({
-        url: "http://localhost:5112/api/tasks/UpdateStatus/" + taskid + "/" + userid,
-        type: "GET",
-        contentType: false,
-        processData: false,
-        success: function (response) {
-          window.location.reload();
-        },
-        error: function (xhr, status, error) {
-          console.log("there was some error while Updating status");
-        }
-      });
-    };
+  };
   </script>
 </body>
 
