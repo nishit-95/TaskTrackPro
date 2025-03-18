@@ -151,6 +151,7 @@ $(document).ready(function () {
                     localStorage.setItem("userID", response.userData.c_userId);
                     localStorage.setItem("userRole", response.userData.c_role);
                     localStorage.setItem("userEmail", response.userData.c_email);
+                    localStorage.setItem("userName", response.userData.c_userName);
 
                     $("#message").removeClass("error").addClass("success").text(response.message);
                     if (response.role === "Admin") {

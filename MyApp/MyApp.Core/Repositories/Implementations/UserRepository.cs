@@ -90,7 +90,7 @@ namespace MyApp.Core.Repositories.Implementations
                     string userStatus = reader.GetString(reader.GetOrdinal("c_status"));
                     
                     // Only proceed if user is active
-                    if (userStatus != "Active")
+                    if (userStatus != "Approved")
                     {
                         // Save the status for later checking
                         UserData.c_status = userStatus;
