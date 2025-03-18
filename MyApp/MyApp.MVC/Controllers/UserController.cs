@@ -37,6 +37,14 @@ namespace MyApp.MVC.Controllers
         {
             return View();
         }
+        public IActionResult Logout()
+        {
+            // Clear session and authentication
+            // localStorage.clear();
+            Response.Cookies.Delete(".AspNetCore.Identity.Application");
+
+            return RedirectToAction("Login", "User"); // Redirect to login page
+        }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
