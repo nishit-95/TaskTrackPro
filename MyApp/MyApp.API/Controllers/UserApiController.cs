@@ -218,7 +218,7 @@ namespace MyApp.API.Controllers
 
         [HttpPost]
         [Route("Login")]
-        public async Task<IActionResult> Login([FromForm] vm_Login user)
+        public async Task<IActionResult> Login([FromBody] vm_Login user)
         {
             if (!ModelState.IsValid)
             {

@@ -33,6 +33,8 @@ builder.Services.AddSingleton<IAdminInterface, AdminRepository>();
 // Add this line with your other service registrations
 builder.Services.AddSingleton<IEmailService, EmailService>();
 builder.Services.AddSingleton<IUserInterface, UserRepository>();
+// builder.Services.AddScoped<IEmailService, EmailService>();
+//  builder.Services.AddScoped<IUserInterface, UserRepository>();
 
 
 
