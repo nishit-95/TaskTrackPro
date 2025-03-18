@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
+using MyApp.Core.Model;
+using MyApp.Core.Repositories.Interfaces;
 using StackExchange.Redis;
 
 namespace MyApp.Core.Services
@@ -30,5 +33,23 @@ namespace MyApp.Core.Services
         {
             await _database.StringSetAsync(key, value);
         }
+
+
+        public void SetTaskList(int userId, List<t_task_user> taskData)
+        {
+            string json = JsonSerializer.Serialize(taskData);
+            _database.StringSet($"TaskList:{userId}", json);
+        }
+
+        public async Task<List<t_task_user>> GetTaskList(int userId)
+        {
+            string json = await _database.StringGetAsync($"TaskList:{userId}");
+            if (json == null)
+            {
+                return new List<t_task_user>();
+            }
+            return JsonSerializer.Deserialize<List<t_task_user>>(json);
+        }
+
     }
 }
