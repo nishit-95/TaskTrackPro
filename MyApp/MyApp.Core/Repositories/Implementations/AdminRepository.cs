@@ -243,8 +243,10 @@ namespace MyApp.Core.Repositories.Implementations
         {
             try
             {
+                await _conn.OpenAsync();
 
-                await using (var cmd = new NpgsqlCommand("INSERT INTO t_task (c_userId, c_title, c_description, c_estimatedDays, c_startDate, c_endDate, c_status, c_document) VALUES (@userId, @title, @description, @estimatedDays, @startDate, @endDate, @status, @document)", _conn))
+                int taskId;
+                using (var cmd = new NpgsqlCommand("INSERT INTO t_task (c_userId, c_title, c_description, c_estimatedDays, c_startDate, c_endDate, c_status, c_document) VALUES (@userId, @title, @description, @estimatedDays, @startDate, @endDate, @status, @document) RETURNING c_taskId", _conn))
                 {
                     cmd.Parameters.AddWithValue("userId", taskAssign.UserId);
                     cmd.Parameters.AddWithValue("title", taskAssign.Title);
@@ -255,14 +257,33 @@ namespace MyApp.Core.Repositories.Implementations
                     cmd.Parameters.AddWithValue("status", taskAssign.Status);
                     cmd.Parameters.AddWithValue("document", DBNull.Value).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Text;
 
-                    await _conn.OpenAsync();
-                    return await cmd.ExecuteNonQueryAsync();
+                    taskId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
                 }
+
+                // Insert notification, but even if it fails, task insertion is already done
+                try
+                {
+                    using (var notificationCmd = new NpgsqlCommand("INSERT INTO t_notification (c_title, c_taskId, c_userId, c_isread) VALUES (@title, @taskId, @userId, @isRead)", _conn))
+                    {
+                        notificationCmd.Parameters.AddWithValue("title", $"New Task Assigned: {taskAssign.Title}");
+                        notificationCmd.Parameters.AddWithValue("taskId", taskId);
+                        notificationCmd.Parameters.AddWithValue("userId", taskAssign.UserId);
+                        notificationCmd.Parameters.AddWithValue("isRead", false); // Default unread
+
+                        await notificationCmd.ExecuteNonQueryAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log notification error, but do not rollback task assignment
+                    Console.WriteLine($"Error inserting notification: {ex.Message}");
+                }
+
+                return taskId;
             }
             catch (Exception ex)
             {
                 throw new Exception($"Error assigning task: {ex.Message}", ex);
-                return 0;
             }
             finally
             {
@@ -270,25 +291,29 @@ namespace MyApp.Core.Repositories.Implementations
                     await _conn.CloseAsync();
             }
         }
-
         public async Task<int> UpdateTask(TaskAssign taskAssign)
         {
             try
             {
-                // check first task is exist or not
-                await using (var cmd = new NpgsqlCommand("SELECT * FROM t_task WHERE c_taskId = @taskId", _conn))
+                await _conn.OpenAsync();
+
+                int userId = 0;
+
+                // Check if the task exists and fetch the userId
+                using (var cmd = new NpgsqlCommand("SELECT c_userId FROM t_task WHERE c_taskId = @taskId", _conn))
                 {
                     cmd.Parameters.AddWithValue("taskId", taskAssign.TaskId);
-                    await _conn.OpenAsync();
                     using (var reader = await cmd.ExecuteReaderAsync())
                     {
                         if (!await reader.ReadAsync())
-                            return 0;
+                            return 0; // Task does not exist
+
+                        userId = reader.GetInt32(0); // Fetch the associated userId
                     }
                 }
 
-                // update task c_title, c_description, c_estimatedDays, c_startDate, c_endDate, c_status, c_document
-                await using (var cmd = new NpgsqlCommand("UPDATE t_task SET c_title = @title, c_description = @description, c_estimatedDays = @estimatedDays, c_startDate = @startDate, c_endDate = @endDate, c_status = @status  WHERE c_taskId = @taskId", _conn))
+                // Update the task details
+                using (var cmd = new NpgsqlCommand("UPDATE t_task SET c_title = @title, c_description = @description, c_estimatedDays = @estimatedDays, c_startDate = @startDate, c_endDate = @endDate, c_status = @status WHERE c_taskId = @taskId", _conn))
                 {
                     cmd.Parameters.AddWithValue("taskId", taskAssign.TaskId);
                     cmd.Parameters.AddWithValue("title", taskAssign.Title);
@@ -298,16 +323,33 @@ namespace MyApp.Core.Repositories.Implementations
                     cmd.Parameters.AddWithValue("endDate", taskAssign.EndDate);
                     cmd.Parameters.AddWithValue("status", taskAssign.Status);
 
+                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                    if (rowsAffected > 0)
+                    {
+                        // Insert notification for task update
+                        try
+                        {
+                            using (var notificationCmd = new NpgsqlCommand("INSERT INTO t_notification (c_title, c_taskId, c_userId, c_isread) VALUES (@title, @taskId, @userId, @isRead)", _conn))
+                            {
+                                notificationCmd.Parameters.AddWithValue("title", $"Task Updated: {taskAssign.Title}");
+                                notificationCmd.Parameters.AddWithValue("taskId", taskAssign.TaskId);
+                                notificationCmd.Parameters.AddWithValue("userId", userId); // Use the fetched userId
+                                notificationCmd.Parameters.AddWithValue("isRead", false); // Default unread
 
-                    return await cmd.ExecuteNonQueryAsync();
+                                await notificationCmd.ExecuteNonQueryAsync();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error inserting notification: {ex.Message}");
+                        }
+                    }
+                    return rowsAffected;
                 }
-
-
             }
             catch (Exception ex)
             {
                 throw new Exception($"Error updating task: {ex.Message}", ex);
-                return 0;
             }
             finally
             {
@@ -315,7 +357,6 @@ namespace MyApp.Core.Repositories.Implementations
                     await _conn.CloseAsync();
             }
         }
-
         public async Task<List<object>> GetAllTask()
         {
             const string query = @"
