@@ -38,8 +38,6 @@ namespace MyApp.API.Controllers
 
         [HttpGet]
         [Route("GetTaskByUserId/{userId}")]
-
-
         #region task actions
         public async Task<IActionResult> GetTaskByUserId(int userId)
         {
@@ -97,7 +95,7 @@ namespace MyApp.API.Controllers
             return Ok(results);
         }
 
-        
+
         // -------For Testing-----------
         [HttpPost("registerQueue")]
         public IActionResult RegisterUser([FromBody] t_user user)
