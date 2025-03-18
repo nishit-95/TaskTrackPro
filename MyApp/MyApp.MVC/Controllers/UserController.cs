@@ -18,6 +18,16 @@ namespace MyApp.MVC.Controllers
             _logger = logger;
         }
 
+        public ActionResult Register()
+        {
+            return View();
+        }
+
+        public ActionResult Login()
+        {
+            return View();
+        }
+
         public IActionResult Index()
         {
             return View();

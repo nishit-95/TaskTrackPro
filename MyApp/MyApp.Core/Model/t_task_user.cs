@@ -18,5 +18,5 @@ public class t_task_user
 
     public string C_Status { get; set; }
 
-    public string C_Document { get; set; }
+    public string? C_Document { get; set; }
 }
