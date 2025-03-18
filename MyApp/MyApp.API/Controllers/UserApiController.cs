@@ -155,6 +155,16 @@ namespace MyApp.API.Controllers
             }
         }
 
+        [HttpGet("sendNotification/{taskTitle}/{userId}/{taskId}")]
+        public async Task<IActionResult> sendNotification(string taskTitle, int userId, int taskId)
+        {
+            int result = await _userServices.SendNotification(taskTitle, userId, taskId);
+            if (result == 0)
+            {
+                return BadRequest("Notificcation was not sent");
+            }
+            return Ok("Notification Sent successfully.");
+        }
         [HttpPost]
         [Route("Register")]
         public async Task<IActionResult> Register([FromForm] t_User1 user)
