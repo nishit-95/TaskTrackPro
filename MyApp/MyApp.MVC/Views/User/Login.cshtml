@@ -1,0 +1,295 @@
+@{
+    ViewData["Title"] = "Login";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - TaskTrackPro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/Login.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="login-bg-wrapper">
+        <!-- Header -->
+        <header class="login-logo-header">
+            <div class="login-logo-wrapper">
+                <img src="/Images/Logo.svg" alt="TaskTrackPro Logo" class="login-logo-img">
+                <div class="separator"></div>
+                <div class="login-brand-text">TaskTrackPro</div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="login-graphic-wrapper d-flex">
+            <!-- Left side with illustration -->
+            <div class="login-left-wrapper">
+                <img src="/Images/Login_Graphics.svg" alt="Task Management Illustration">
+            </div>
+
+            <!-- Right side with login form -->
+            <div class="login-right-wrapper">
+                <div class="loginpage-box-wrapper">
+                    <h2 class="login-title font-bold">Login</h2>
+                    <div class="loginpage-box-content">
+    <form id="loginForm">
+        <div class="form-group">
+            <input type="email" id="email" name="c_email" class="k-textbox" placeholder="Email" required />
+            <span class="login-textbox-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.708 2.825L15 11.105V5.383zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741zM1 11.105l4.708-2.897L1 5.383v5.722z"/>
+                </svg>
+            </span>
+            <div class="error-message" id="emailError"></div>
+        </div>
+        <div class="form-group">
+            <input type="password" id="password" name="c_password" class="k-textbox" placeholder="Password" required />
+            <span class="login-textbox-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM5 8h6a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/>
+                </svg>
+            </span>
+            <div class="error-message" id="passwordError"></div>
+        </div>
+        <button type="submit" class="btn btn-primary w100 loginbtn">Login</button>
+    </form>
+    <div class="message" id="message"></div>
+    <div class="text-center pb-10" style="margin-top: 20px;">
+        <span>Don't have an account? </span>
+        <a href="/User/Register" class="btn-link-trans">Register here</a>
+    </div>
+    <div class="text-center" style="margin-top: 10px;">
+        <a href="#" id="forgotPasswordLink" class="btn-link-trans">Forgot Password?</a>
+    </div>
+</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" role="dialog" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="forgotPasswordModalLabel">Reset Password</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="forgotPasswordForm">
+                        <div class="form-group">
+                            <label for="resetEmail">Email Address</label>
+                            <input type="email" class="form-control" id="resetEmail" placeholder="Enter your email" required>
+                        </div>
+                        <div class="message" id="resetMessage"></div>
+                        <div id="resetTokenSection" style="display: none;">
+                            <div class="form-group">
+                                <label for="resetToken">Reset Token</label>
+                                <input type="text" class="form-control" id="resetToken" placeholder="Enter the token sent to your email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <input type="password" class="form-control" id="newPassword" placeholder="Enter your new password" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm Password</label>
+                                <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm your new password" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" id="requestResetBtn" class="btn btn-primary">Request Reset</button>
+                    <button type="button" id="setNewPasswordBtn" class="btn btn-primary" style="display: none;">Reset Password</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+$(document).ready(function () {
+    // Live validation events
+    $('#email').on('input', validateEmail);
+    $('#password').on('input', validatePassword);
+
+    $("#loginForm").submit(function (e) {
+        e.preventDefault();
+
+        if (!validateForm()) {
+            return;
+        }
+
+        var formData = {
+            c_email: $("#email").val(),
+            c_password: $("#password").val()
+        };
+
+        $.ajax({
+            url: 'http://localhost:5112/api/UserApi/Login',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+           
+            beforeSend: function() {
+                $('.loginbtn').prop('disabled', true).text('Logging in...');
+            },
+           
+            success: function (response) {
+                console.log(response.userData.c_userId);
+                console.log(response.userData.c_role);
+                console.log("before setItem email"+response.userData.c_email);
+
+
+                if (response.success) {
+                    localStorage.setItem("userID", response.userData.c_userId);
+                    localStorage.setItem("userRole", response.userData.c_role);
+                    localStorage.setItem("userEmail", response.userData.c_email);
+                    localStorage.setItem("userName", response.userData.c_userName);
+
+                    $("#message").removeClass("error").addClass("success").text(response.message);
+                    if (response.role === "Admin") {
+                        window.location.href = "/Admin/Index";
+                    } else if (response.role === "User") {
+                        window.location.href = "/User/Index";
+                    }
+                } else {
+                    $("#message").removeClass("success").addClass("error").text(response.message);
+                }
+            },
+            error: function (xhr) {
+                var errorMsg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "An error occurred";
+                $("#message").removeClass("success").addClass("error").text(errorMsg);
+            },
+            complete: function() {
+                $('.loginbtn').prop('disabled', false).text('Login');
+            }
+        });
+    });
+
+    // Validation functions
+    function validateEmail() {
+        const value = $('#email').val();
+        const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+        if (!value || !emailRegex.test(value)) {
+            showError('#email', '#emailError', 'Please enter a valid email');
+            return false;
+        }
+        showValid('#email', '#emailError');
+        return true;
+    }
+
+    function validatePassword() {
+        const value = $('#password').val();
+        if (!value || value.length < 6) {
+            showError('#password', '#passwordError', 'Password must be at least 6 characters');
+            return false;
+        }
+        showValid('#password', '#passwordError');
+        return true;
+    }
+
+    function validateForm() {
+        return validateEmail() && validatePassword();
+    }
+
+    function showError(inputSelector, errorSelector, message) {
+        $(inputSelector).removeClass('input-valid').addClass('input-error');
+        $(errorSelector).text(message).show();
+    }
+
+    function showValid(inputSelector, errorSelector) {
+        $(inputSelector).removeClass('input-error').addClass('input-valid');
+        $(errorSelector).text('').hide();
+    }
+
+    // Forgot Password Modal (unchanged, just keeping context)
+    $("#forgotPasswordLink").click(function(e) {
+        e.preventDefault();
+        $("#forgotPasswordModal").modal("show");
+        $("#resetTokenSection").hide();
+        $("#requestResetBtn").show();
+        $("#setNewPasswordBtn").hide();
+        $("#resetMessage").text("").removeClass("success error");
+    });
+
+    $("#requestResetBtn").click(function() {
+        var email = $("#resetEmail").val();
+        if (!email) {
+            $("#resetMessage").removeClass("success").addClass("error").text("Please enter your email address.");
+            return;
+        }
+
+        $.ajax({
+            url: 'http://localhost:5112/api/UserApi/ForgotPassword',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ email: email }),
+            success: function(response) {
+                if (response.success) {
+                    $("#resetMessage").removeClass("error").addClass("success").text(response.message);
+                    $("#resetTokenSection").show();
+                    $("#requestResetBtn").hide();
+                    $("#setNewPasswordBtn").show();
+                } else {
+                    $("#resetMessage").removeClass("success").addClass("error").text(response.message);
+                }
+            },
+            error: function(xhr) {
+                var errorMsg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "An error occurred";
+                $("#resetMessage").removeClass("success").addClass("error").text(errorMsg);
+            }
+        });
+    });
+
+    $("#setNewPasswordBtn").click(function() {
+        var email = $("#resetEmail").val();
+        var token = $("#resetToken").val();
+        var newPassword = $("#newPassword").val();
+        var confirmPassword = $("#confirmPassword").val();
+
+        if (!email || !token || !newPassword || !confirmPassword) {
+            $("#resetMessage").removeClass("success").addClass("error").text("Please fill in all fields.");
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            $("#resetMessage").removeClass("success").addClass("error").text("Passwords do not match.");
+            return;
+        }
+
+        $.ajax({
+            url: 'http://localhost:5112/api/UserApi/ResetPassword',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ 
+                email: email,
+                token: token,
+                newPassword: newPassword
+            }),
+            success: function(response) {
+                if (response.success) {
+                    $("#resetMessage").removeClass("error").addClass("success").text(response.message);
+                    setTimeout(function() {
+                        $("#forgotPasswordModal").modal("hide");
+                    }, 2000);
+                } else {
+                    $("#resetMessage").removeClass("success").addClass("error").text(response.message);
+                }
+            },
+            error: function(xhr) {
+                var errorMsg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "An error occurred";
+                $("#resetMessage").removeClass("success").addClass("error").text(errorMsg);
+            }
+        });
+    });
+});
+</script>
+</body>
+</html>
