@@ -409,7 +409,7 @@
       dataSource: {
         transport: {
             read: {
-                url: "http://localhost:5112/api/tasks/GetTaskByUserId/2",  // 🔹 Replace with your API endpoint
+                url: "http://localhost:5112/api/tasks/GetTaskByUserId/1",  // 🔹 Replace with your API endpoint
                 dataType: "json" // Expect JSON response
             }
         },
@@ -441,12 +441,12 @@
         { field: "c_Status", title: "Status", width: "200px", template: "#= c_Status == 'Completed' ? '✅ Done' : '⏳ Pending' #" },
         {
             title: "Mark As Done",
-            template: `<button class='k-button k-button-solid-error' onclick='UpdateStatus(#=c_Taskid#,#=c_Userid#,"#=c_Title#")'>✔ Complete</button>`,
+            template: `<button class='k-button k-button-solid-error' onclick='UpdateStatus(#=c_Taskid#,#=c_Userid#)'>✔ Complete</button>`,
             width: 150
         }
     ]
   });
-  function UpdateStatus(taskid,userid,taskTitle)
+  function UpdateStatus(taskid,userid)
   {
     console.log(taskid);
     $.ajax({
@@ -456,39 +456,13 @@
       processData:false,
       success:function(response)
       {
-        $.ajax({
-          url: "http://localhost:5112/api/tasks/sendNotification/" + taskTitle + "/" + userid + "/" + taskid,
-          type: "GET",
-          contentType: false,
-          processData: false,
-          success: function(response){
-            window.location.reload();
-          },
-          error: function(xhr,status,error)
-          {
-            console.log("there was some error while sending notification : " + error);
-          } 
-        });
+        window.location.reload();
       },
       error: function (xhr, status, error) {
         console.log("there was some error while Updating status");
       }
     });
-    function UpdateStatus(taskid, userid) {
-      console.log(taskid);
-      $.ajax({
-        url: "http://localhost:5112/api/tasks/UpdateStatus/" + taskid + "/" + userid,
-        type: "GET",
-        contentType: false,
-        processData: false,
-        success: function (response) {
-          window.location.reload();
-        },
-        error: function (xhr, status, error) {
-          console.log("there was some error while Updating status");
-        }
-      });
-    };
+  };
   </script>
 </body>
 
