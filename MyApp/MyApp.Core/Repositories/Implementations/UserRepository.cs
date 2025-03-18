@@ -90,5 +90,37 @@ namespace MyApp.Core.Repositories.Implementations
 
         }
 
+        public async Task<int> SendNotification(string taskTitle, int userId, int taskId)
+        {
+            await _conn.CloseAsync();
+            await _conn.OpenAsync();
+            try
+            {
+                NpgsqlCommand sendNotificationCmd = new NpgsqlCommand(@"INSERT INTO t_notification 
+                (c_title,c_taskid,c_userid)
+                VALUES 
+                (@c_title,@c_taskid,@c_userid) ", _conn);
+                sendNotificationCmd.Parameters.AddWithValue("@c_title", taskTitle);
+                sendNotificationCmd.Parameters.AddWithValue("@c_taskid", taskId);
+                sendNotificationCmd.Parameters.AddWithValue("@c_userid", userId);
+                int result = await sendNotificationCmd.ExecuteNonQueryAsync();
+                if (result == 0)
+                {
+                    System.Console.WriteLine("ERROR : From userrepo SendNotification method, the notification was not sent : ");
+                    return 0;
+                }
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine("ERROR : From userrepo SendNotification method, There was some error while Sending the notification : " + ex.Message);
+                return 0;
+            }
+            finally
+            {
+                await _conn.CloseAsync();
+            }
+        }
+
     }
 }

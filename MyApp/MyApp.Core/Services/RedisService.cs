@@ -38,7 +38,7 @@ namespace MyApp.Core.Services
         public void SetTaskList(int userId, List<t_task_user> taskData)
         {
             string json = JsonSerializer.Serialize(taskData);
-            _database.StringSet($"TaskList:{userId}", json);
+            _database.StringSet($"TaskList:{userId}", json, TimeSpan.FromMinutes(1));
         }
 
         public async Task<List<t_task_user>> GetTaskList(int userId)

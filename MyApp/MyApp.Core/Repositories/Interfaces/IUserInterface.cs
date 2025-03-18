@@ -11,5 +11,7 @@ namespace MyApp.Core.Repositories.Interfaces
         Task<List<t_task_user>> GetTaskByUserId(int userId);
 
         Task<int> UpdateStatus(int taskId);
+
+        Task<int> SendNotification(string taskTitle, int userId, int taskId);
     }
 }

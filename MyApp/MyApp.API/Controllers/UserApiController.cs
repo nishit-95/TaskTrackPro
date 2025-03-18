@@ -97,7 +97,7 @@ namespace MyApp.API.Controllers
             return Ok(results);
         }
 
-        
+
         // -------For Testing-----------
         [HttpPost("registerQueue")]
         public IActionResult RegisterUser([FromBody] t_user user)
@@ -154,9 +154,16 @@ namespace MyApp.API.Controllers
             }
         }
 
-
-
-
+        [HttpGet("sendNotification/{taskTitle}/{userId}/{taskId}")]
+        public async Task<IActionResult> sendNotification(string taskTitle, int userId, int taskId)
+        {
+            int result = await _userServices.SendNotification(taskTitle, userId, taskId);
+            if (result == 0)
+            {
+                return BadRequest("Notificcation was not sent");
+            }
+            return Ok("Notification Sent successfully.");
+        }
 
     }
 }
