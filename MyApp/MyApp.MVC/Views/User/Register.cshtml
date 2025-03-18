@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <title>Clarent Institute Login</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+    <div class="login-bg-wrapper d-flex flex-column">
+        <div class="login-logo-header d-flex align-items-center">
+            <a href="#" class="login-logo-wrapper">
+                <img src="/Images/Logo.svg" class="login-logo-img" alt="Clarent Institute" />
+            </a>
+            <span class="separator"></span>
+            <span class="login-branh-text">TaskTrackPro</span>
+        </div>
+        <div class="login-graphic-wrapper flex-1 overflow-auto d-flex flex-wrap">
+            <div class="login-left-wrapper">
+                <div>
+                    <img src="/Images/Login_Graphics.svg" alt="Clarent Institute"/>
+                </div>
+            </div>
+            <div class="login-right-wrapper">
+                <div class="loginpage-box-wrapper">
+                    <h2 class="login-title text-dark font-bold">Sign Up</h2>
+                    <div class="loginpage-box-content">
+    <div class="form-group">
+        <input type="text" class="k-textbox login-textbox" placeholder="Full Name" id="registerName">
+        <span class="login-textbox-icon"><i class="fas fa-user"></i></span>
+        <div class="error-message" id="nameError"></div>
+    </div>
+    <div class="form-group">
+        <input type="email" class="k-textbox login-textbox" placeholder="Email" id="registerEmail">
+        <span class="login-textbox-icon"><i class="fas fa-envelope"></i></span>
+        <div class="error-message" id="emailError"></div>
+    </div>
+    <div class="form-group">
+        <input type="password" class="k-textbox login-textbox" placeholder="Password" id="registerpwd">
+        <span class="login-textbox-icon"><i class="fas fa-lock"></i></span>
+        <div class="error-message" id="passwordError"></div>
+    </div>
+    <div class="form-group">
+        <input type="password" class="k-textbox login-textbox" placeholder="Confirm Password" id="registerConfirmpwd">
+        <span class="login-textbox-icon"><i class="fas fa-lock"></i></span>
+        <div class="error-message" id="confirmPasswordError"></div>
+    </div>
+    <div class="form-group">
+        <input type="text" class="k-textbox login-textbox" placeholder="Mobile Number" id="registerMobile">
+        <span class="login-textbox-icon"><i class="fas fa-phone"></i></span>
+        <div class="error-message" id="mobileError"></div>
+    </div>
+    <div class="form-group">
+        <select class="k-textbox login-textbox" id="registerGender">
+            <option value="" disabled selected>Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+        </select>
+        <span class="login-textbox-icon"><i class="fas fa-user"></i></span>
+        <div class="error-message" id="genderError"></div>
+    </div>
+    <div class="form-group">
+        <textarea class="k-textbox login-textbox" placeholder="Address" id="registerAddress"></textarea>
+        <span class="login-textbox-icon"><i class="fas fa-home"></i></span>
+        <div class="error-message" id="addressError"></div>
+    </div>
+    <div class="form-group">
+        <label for="registerImage">Profile Image</label>
+        <div class="file-upload">
+            <button type="button" class="upload-btn">Choose File</button>
+            <span class="upload-filename">No file chosen</span>
+            <input type="file" id="registerImage" accept="image/*">
+        </div>
+        <div class="error-message" id="imageError"></div>
+    </div>
+    <div class="login-input-check">
+        <div class="login-input-checkbox">
+            <input type="checkbox" class="k-checkbox" checked id="acceptTerms">
+            <label class="k-checkbox-label" for="acceptTerms">
+                <span>I accept the</span>
+                <a href="#" aria-label="Terms of Use">Terms of Use</a>
+                <span> & </span>
+                <a href="#" aria-label="Privacy Policy">Privacy Policy</a>.
+            </label>
+        </div>
+        <div class="error-message" id="termsError"></div>
+    </div>
+    <div class="form-group pb-10">
+        <button class="btn btn-primary k-button w100 loginbtn">Sign Up</button>
+    </div>
+    <div class="text-center">
+        <span class="text-dark font-medium">Have an account with us?</span>
+        <a href="/User/Login" aria-label="Login" class="forgot-pwd btn-link-trans font-medium text-dark text-primary">Login here</a>
+    </div>
+</div>
+                </div>
+            </div>            
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/lib/Kendo/kendo.all.min.js"></script>
+    <script>
+$(document).ready(function() {
+    // Handle file upload preview
+    $('#registerImage').on('change', function(e) {
+        const filename = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
+        $('.upload-filename').text(filename);
+        validateImage();
+    });
+
+    $('.upload-btn').on('click', function() {
+        $('#registerImage').click();
+    });
+
+    // Live validation events
+    $('#registerName').on('input', validateName);
+    $('#registerEmail').on('input', validateEmail);
+    $('#registerpwd').on('input', validatePassword);
+    $('#registerConfirmpwd').on('input', validateConfirmPassword);
+    $('#registerMobile').on('input', validateMobile);
+    $('#registerGender').on('change', validateGender);
+    $('#registerAddress').on('input', validateAddress);
+    $('#acceptTerms').on('change', validateTerms);
+
+    // Handle form submission
+    $('.loginbtn').on('click', function(e) {
+        e.preventDefault();
+
+        if (!validateForm()) {
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append('c_userName', $('#registerName').val());
+        formData.append('c_email', $('#registerEmail').val());
+        formData.append('c_password', $('#registerpwd').val());
+        formData.append('c_mobile', $('#registerMobile').val());
+        formData.append('c_gender', $('#registerGender').val());
+        formData.append('c_address', $('#registerAddress').val());
+        formData.append('c_status', 'Pending');
+        if ($('#registerImage')[0].files[0]) {
+            formData.append('ProfilePicture', $('#registerImage')[0].files[0]);
+        }
+
+        $.ajax({
+            url: 'http://localhost:5112/api/UserApi/Register',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            beforeSend: function() {
+                $('.loginbtn').prop('disabled', true).text('Registering...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert(response.message);
+                    window.location.href = '/User/Login';
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'Registration failed';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                alert(errorMessage);
+            },
+            complete: function() {
+                $('.loginbtn').prop('disabled', false).text('Sign Up');
+            }
+        });
+    });
+
+    // Validation functions
+    function validateName() {
+        const value = $('#registerName').val().trim();
+        if (!value || value.length < 2) {
+            showError('#registerName', '#nameError', 'Full name must be at least 2 characters');
+            return false;
+        }
+        showValid('#registerName', '#nameError');
+        return true;
+    }
+
+    function validateEmail() {
+        const value = $('#registerEmail').val();
+        const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+        if (!emailRegex.test(value)) {
+            showError('#registerEmail', '#emailError', 'Please enter a valid email');
+            return false;
+        }
+        showValid('#registerEmail', '#emailError');
+        return true;
+    }
+
+    function validatePassword() {
+        const value = $('#registerpwd').val();
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).+$/;
+        if (value.length < 6 || !passwordRegex.test(value)) {
+            showError('#registerpwd', '#passwordError', 'Password must be 6+ characters with at least one letter and one number');
+            return false;
+        }
+        showValid('#registerpwd', '#passwordError');
+        validateConfirmPassword(); // Re-validate confirm password when password changes
+        return true;
+    }
+
+    function validateConfirmPassword() {
+        const password = $('#registerpwd').val();
+        const confirm = $('#registerConfirmpwd').val();
+        if (confirm !== password || !confirm) {
+            showError('#registerConfirmpwd', '#confirmPasswordError', 'Passwords do not match');
+            return false;
+        }
+        showValid('#registerConfirmpwd', '#confirmPasswordError');
+        return true;
+    }
+
+    function validateMobile() {
+        const value = $('#registerMobile').val();
+        const mobileRegex = /^\d{10}$/;
+        if (value && !mobileRegex.test(value)) {
+            showError('#registerMobile', '#mobileError', 'Please enter a valid 10-digit mobile number');
+            return false;
+        }
+        showValid('#registerMobile', '#mobileError');
+        return true;
+    }
+
+    function validateGender() {
+        const value = $('#registerGender').val();
+        if (!value) {
+            showError('#registerGender', '#genderError', 'Please select gender');
+            return false;
+        }
+        showValid('#registerGender', '#genderError');
+        return true;
+    }
+
+    function validateAddress() {
+        const value = $('#registerAddress').val();
+        if (value.length > 400) {
+            showError('#registerAddress', '#addressError', 'Address must not exceed 400 characters');
+            return false;
+        }
+        showValid('#registerAddress', '#addressError');
+        return true;
+    }
+
+    function validateImage() {
+        const file = $('#registerImage')[0].files[0];
+        if (file) {
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            const allowedTypes = ['image/jpeg', 'image/png'];
+            if (file.size > maxSize) {
+                showError('#registerImage', '#imageError', 'Image must not exceed 5MB');
+                return false;
+            }
+            if (!allowedTypes.includes(file.type)) {
+                showError('#registerImage', '#imageError', 'Only JPG and PNG files are allowed');
+                return false;
+            }
+        }
+        showValid('#registerImage', '#imageError');
+        return true;
+    }
+
+    function validateTerms() {
+        if (!$('#acceptTerms').is(':checked')) {
+            showError('#acceptTerms', '#termsError', 'Please accept the Terms of Use and Privacy Policy');
+            return false;
+        }
+        showValid('#acceptTerms', '#termsError');
+        return true;
+    }
+
+    function validateForm() {
+        return validateName() && validateEmail() && validatePassword() && 
+               validateConfirmPassword() && validateMobile() && validateGender() && 
+               validateAddress() && validateImage() && validateTerms();
+    }
+
+    function showError(inputSelector, errorSelector, message) {
+        $(inputSelector).removeClass('input-valid').addClass('input-error');
+        $(errorSelector).text(message).show();
+    }
+
+    function showValid(inputSelector, errorSelector) {
+        $(inputSelector).removeClass('input-error').addClass('input-valid');
+        $(errorSelector).text('').hide();
+    }
+});
+</script>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/Kendo/kendo.all.min.js"></script>
+    <script>
+        function handleFirstTab(e) {
+            document.body.classList.add('user-is-tabbing');
+            document.removeEventListener('keyup', handleFirstTab);
+            document.addEventListener('mousedown', handleMouseDownOnce);
+        }
+
+        function handleMouseDownOnce() {
+            document.body.classList.remove('user-is-tabbing');
+            document.removeEventListener('mousedown', handleMouseDownOnce);
+            document.addEventListener('keyup', handleFirstTab);
+        }
+
+        window.addEventListener('keyup', handleFirstTab);
+    </script>
+
+    <script>
+        document.querySelector('.file-upload input').addEventListener('change', function(e) {
+            const filename = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
+            document.querySelector('.upload-filename').textContent = filename;
+        });
+        
+        document.querySelector('.upload-btn').addEventListener('click', function() {
+            document.querySelector('.file-upload input').click();
+        });
+    </script>
+</body>
+</html>

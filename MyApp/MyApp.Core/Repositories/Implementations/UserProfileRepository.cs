@@ -43,7 +43,7 @@ namespace MyApp.Core.Repositories.Implementations
                         c_Gender = reader["c_gender"].ToString(),
                         c_Address = reader["c_address"].ToString(),
                         c_Image = reader["c_image"].ToString(),
-                        c_Role=reader["c_role"].ToString(),
+                        c_Role = reader["c_role"].ToString(),
                     };
                 }
             }
@@ -59,25 +59,79 @@ namespace MyApp.Core.Repositories.Implementations
             return user;
         }
 
-        public async Task<int> Update(vm_UserProfile user)
+
+        public async Task<int> ResetPassword(vm_UserProfile user, string currentPassword)
         {
-                await using var con = new NpgsqlConnection("Server=cipg01; Port=5432; Database=Group_E_TaskTrack; User Id=postgres; Password=123456;");
             try
             {
-                await con.CloseAsync();
-                await con.OpenAsync();
-                string query = "UPDATE t_user SET c_username=@c_username, c_mobile=@c_mobile, c_gender=@c_gender, c_address=@c_address, c_image=@c_image WHERE c_email=@c_email";
+                await _conn.OpenAsync(); // Open database connection asynchronously
 
-                var cmd = new NpgsqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@c_username", user.c_UserName ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@c_mobile", user.c_Mobile ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@c_gender", user.c_Gender ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@c_address", user.c_Address ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@c_image", user.c_Image ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@c_email", user.c_Email ?? (object)DBNull.Value);
-                await con.OpenAsync();
+                // Validate input parameters
+                if (string.IsNullOrEmpty(user.c_Email) || string.IsNullOrEmpty(user.c_Password) || string.IsNullOrEmpty(currentPassword))
+                {
+                    throw new ArgumentException("Email, current password, and new password must be provided.");
+                }
+
+                // Check if the user with the provided email exists and verify the current password
+                using (var checkCmd = new NpgsqlCommand("SELECT c_password FROM t_user WHERE c_email = @email", _conn))
+                {
+                    checkCmd.Parameters.AddWithValue("@email", user.c_Email);
+
+                    using (var reader = await checkCmd.ExecuteReaderAsync())
+                    {
+                        if (!await reader.ReadAsync())
+                        {
+                            throw new ArgumentException("User with provided email does not exist.");
+                        }
+
+                        var storedPassword = reader.GetString(0);
+
+                        if (currentPassword != storedPassword)
+                        {
+                            throw new ArgumentException("Incorrect current password.");
+                        }
+                    }
+                }
+                Console.WriteLine("current password in repo "+currentPassword);
+                // Update the user's password
+                using (var updateCmd = new NpgsqlCommand("UPDATE t_user SET c_password = @password WHERE c_email = @email AND c_password=@currentpassword" , _conn))
+                {
+                    updateCmd.Parameters.AddWithValue("@password", user.c_Password);
+                    updateCmd.Parameters.AddWithValue("@currentpassword", currentPassword);
+                    updateCmd.Parameters.AddWithValue("@email", user.c_Email);
+                    return await updateCmd.ExecuteNonQueryAsync(); // Execute the update command asynchronously
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions
+                Console.WriteLine("Error: " + ex.Message);
+                throw;
+            }
+            finally
+            {
+                await _conn.CloseAsync(); // Close database connection asynchronously
+            }
+        }
+
+
+        public async Task<int> Update(vm_UserProfile user)
+        {
+            try
+            {
+                await _conn.CloseAsync();
+                await _conn.OpenAsync();
+                string query = "UPDATE t_user SET c_username=@c_username, c_mobile=@c_mobile, c_address=@c_address, c_image=@c_image WHERE c_email=@c_email";
+
+                var cmd = new NpgsqlCommand(query, _conn);
+                cmd.Parameters.AddWithValue("@c_username", user.c_UserName);
+                cmd.Parameters.AddWithValue("@c_mobile", user.c_Mobile);
+                cmd.Parameters.AddWithValue("@c_address", user.c_Address);
+                cmd.Parameters.AddWithValue("@c_image", user.c_Image);
+                cmd.Parameters.AddWithValue("@c_email", user.c_Email);
                 int rowsAffected = await cmd.ExecuteNonQueryAsync();
                 Console.WriteLine("------------> " + rowsAffected);
+                Console.WriteLine("------------>address " + user.c_Address);
                 return rowsAffected;
             }
             catch (Exception ex)
@@ -87,36 +141,11 @@ namespace MyApp.Core.Repositories.Implementations
             }
             finally
             {
-                await con.CloseAsync();
+                await _conn.CloseAsync();
             }
         }
 
-    
-        // public async Task<int> Update(vm_UserProfile user)
-        // {
-        //     try{
-        //         await _conn.CloseAsync();
-        //         await _conn.OpenAsync();
 
-        //         string query="UPDATE t_user SET c_username=@c_username, c_mobile=@c_mobile,c_gender=@c_gender,c_address=@c_address,c_image=@c_image";
-        //         using var cmd=new NpgsqlCommand(query,_conn);
-        //         cmd.Parameters.AddWithValue("@c_username",user.c_UserName);
-        //         cmd.Parameters.AddWithValue("@c_mobile",user.c_Mobile);
-        //         cmd.Parameters.AddWithValue("@c_gender",user.c_Gender);
-        //         cmd.Parameters.AddWithValue("@c_address",user.c_Address);
-        //         cmd.Parameters.AddWithValue("@c_image",user.c_Image);
 
-        //         int rowsAffected=await cmd.ExecuteNonQueryAsync();
-        //         Console.WriteLine("------------>"+rowsAffected);
-        //         return rowsAffected;
-        //     }
-        //     catch(Exception ex){
-        //         Console.WriteLine($"Error while updating the user profile: {ex.Message}");
-        //         throw;
-        //     }
-        //     finally{
-        //         await _conn.CloseAsync();
-        //     }
-        // }
     }
 }

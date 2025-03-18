@@ -213,7 +213,7 @@
                             startDate: { type: "date" },
                             endDate: { type: "date" },
                             status: { type: "string" },
-                            document: { type: "string" }
+                            
                         }
                     }
                 },
@@ -223,7 +223,7 @@
             pageable: true,
             editable: "inline",
             columns: [
-                { field: "taskId", title: "Task ID", width: "50px" },
+                { field: "taskId", title: "Task ID", width: "50px", hidden: true },
                 { field: "userName", title: "Assigned User", width: "150px", editable: false },
                 { field: "title", title: "Task Title", width: "150px" },
                 { field: "description", title: "Description", width: "200px" },
@@ -231,7 +231,7 @@
                 { field: "startDate", title: "Start Date", format: "{0:yyyy-MM-dd}", width: "100px" },
                 { field: "endDate", title: "End Date", format: "{0:yyyy-MM-dd}", width: "100px" },
                 { field: "status", title: "Status", width: "120px" },
-                { field: "document", title: "Document", width: "150px" },
+               
                 { command: ["edit", "destroy"], title: "&nbsp;", width: "200px" }
             ]
         });

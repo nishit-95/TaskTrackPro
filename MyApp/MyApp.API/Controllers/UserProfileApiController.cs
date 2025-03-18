@@ -41,44 +41,67 @@ namespace MyApp.API.Controllers
 
 
         [HttpPut("update-profile")]
-        public async Task<IActionResult> Put([FromForm] vm_UserProfile user)
+        public async Task<IActionResult> Put([FromForm] vm_UserProfile user, IFormFile photo)
         {
             try
-            {        
-                var existingUser =await _userProfileRepo.GetOneUser("user@example.com");
-                // Console.WriteLine("user found -> "+ existingUser.ToString());                                
-                // var existingUser = _userProfileRepository.GetOneUser(user.c_email);
+            {
+                // Console.WriteLine
+                // if (user.c_UserId == 0)
+                // {
+                //     return BadRequest("Invalid user profile data");
+                // }
+                var existingUser = await _userProfileRepo.GetOneUser(user.c_Email);
+                Console.WriteLine("---------->" + existingUser.c_UserId);
                 if (existingUser == null)
                 {
-                    return NotFound("User Profile not found");
+                    return NotFound("User profile not found");
                 }
-                // if (photo != null)
-                // {
-                //     var uploadsFolder = Path.Combine("..\\MVC\\wwwroot", "photo");
-                //     string uniqueFilename = Guid.NewGuid().ToString() + "_" + photo.FileName;
-                //     string filepath = Path.Combine(uploadsFolder, uniqueFilename);
+                if (photo != null)
+                {
+                    Console.WriteLine("----------->Photo is not null");
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "..\\MyApp.MVC\\wwwroot\\user_images");
+                    string uniqueFilename = Guid.NewGuid().ToString() + "_" + photo.FileName;
+                    string filepath = Path.Combine(uploadsFolder, uniqueFilename);
 
-                //     // Save file asynchronously
-                //     await using var stream = new FileStream(filepath, FileMode.Create);
-                //     await photo.CopyToAsync(stream);
+                    // Save file asynchronously
+                    await using var stream = new FileStream(filepath, FileMode.Create);
+                    await photo.CopyToAsync(stream);
 
-                //     user.c_Image = uniqueFilename;
-                // }
-                // else
-                // {
-                //     user.c_Image = existingUser.c_Image;
-                // }
-                Console.WriteLine("While updating the user -> " + user.c_Address);
+                    user.c_Image = uniqueFilename;
+                }
+                else
+                {
+                    user.c_Image = existingUser.c_Image;
+                }
                 await _userProfileRepo.Update(user);
-
                 return Ok("User profile updated successfully");
 
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"An error occurred while updating user profile: {ex.Message}");
-                return StatusCode(500, "Internal server error");    
+                return StatusCode(500, "Internal server error");
                 // return null;
+            }
+        }
+
+
+
+        [HttpPut("reset-password")]
+        public IActionResult ResetPassword(vm_UserProfile user, string currentPassword)
+        {
+            try
+            {
+                _userProfileRepo.ResetPassword(user, currentPassword);
+                return Ok("Password reset successfully.");
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, "Internal server error: " + ex.Message);
             }
         }
 

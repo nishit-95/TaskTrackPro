@@ -1,11 +1,13 @@
 using Elastic.Clients.Elasticsearch;
 using Elastic.Transport;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
 using MyApp.Core.Repositories.Implementations;
 using MyApp.Core.Repositories.Interfaces;
 using MyApp.Core.Services;
 using MyApp.MVC.Models;
 using Nest;
+using Services;
 using Npgsql;
 using StackExchange.Redis;
 
@@ -22,11 +24,15 @@ var client = new ElasticClient(settings);
 builder.Services.AddScoped<ElasticSearchService>();
 
 builder.Services.AddSingleton<IElasticClient>(client);
-builder.Services.AddSingleton<IUserInterface, UserRepository>();
+
 builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
 builder.Services.AddSingleton<IRedisService, RedisService>();
-builder.Services.AddScoped<IUserProfileInterface, UserProfileRepository>();
-builder.Services.AddScoped<IAdminInterface, AdminRepository>();
+builder.Services.AddSingleton<IUserProfileInterface, UserProfileRepository>();
+builder.Services.AddSingleton<IAdminInterface, AdminRepository>();
+
+// Add this line with your other service registrations
+builder.Services.AddSingleton<IEmailService, EmailService>();
+builder.Services.AddSingleton<IUserInterface, UserRepository>();
 
 
 
@@ -164,14 +170,14 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Admin API V1");
     });
 }
-
+app.UseStaticFiles();
 app.UseHttpsRedirection();
 
 var summaries = new[]
 {
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
-
+app.UseStaticFiles();
 app.UseAuthorization();
 
 // ✅ Route for API Controllers
@@ -185,5 +191,7 @@ app.MapControllerRoute(
 
 app.MapControllers();
 app.UseCors("corsapp");
+app.UseStaticFiles();
+
 app.Run();
 
