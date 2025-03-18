@@ -268,6 +268,7 @@
         src="./dashboard-iframe.html"
       ></iframe> *@
     <p>this is dashboard section</p>
+    <div id="taskList"></div>
   </div>
   <!-- ##end main content -->
   <!-- footer -->
@@ -326,7 +327,6 @@
           method: "GET",
           success: function (data) {
             console.log(data);
-            debugger;
             if (data != null) {
               console.log("data is not null");
               $("#userid").val(data.c_userid);
@@ -424,6 +424,64 @@
         template: kendo.template($("#thumnail_template").html()),
       });
     });
+    $("#taskList").kendoGrid({
+      dataSource: {
+        transport: {
+            read: {
+                url: "http://localhost:5112/api/tasks/GetTaskByUserId/1",  // 🔹 Replace with your API endpoint
+                dataType: "json" // Expect JSON response
+            }
+        },
+        schema: {
+            model: {
+                fields: {
+                    c_Taskid: { type: "number" },
+                    c_Title: { type: "string" },
+                    c_Description: { type: "string" },
+                    c_Estimateddays: { type: "number" },
+                    c_Startdate: { type: "date" },
+                    c_Enddate: { type: "date" },
+                    c_Status: { type: "string" }
+                }
+            }
+        },
+        pageSize: 4
+    },
+    height: 400,
+    pageable: true,
+    sortable: true,
+    filterable: true,
+    columns: [
+        { field: "c_Title", title: "Title", width: "100px" },
+        { field: "c_Description", title: "Description", width: "80px" },
+        { field: "c_Estimateddays", title: "Estimated Days", width: "200px" },
+        { field: "c_Startdate", title: "Start Date", width: "200px", format: "{0:MM/dd/yyyy}" },
+        { field: "c_Enddate", title: "End Date", width: "200px", format: "{0:MM/dd/yyyy}" },
+        { field: "c_Status", title: "Status", width: "200px", template: "#= c_Status == 'Completed' ? '✅ Done' : '⏳ Pending' #" },
+        {
+            title: "Mark As Done",
+            template: `<button class='k-button k-button-solid-error' onclick='UpdateStatus(#=c_Taskid#,#=c_Userid#)'>✔ Complete</button>`,
+            width: 150
+        }
+    ]
+  });
+  function UpdateStatus(taskid,userid)
+  {
+    console.log(taskid);
+    $.ajax({
+      url: "http://localhost:5112/api/tasks/UpdateStatus/" + taskid + "/" + userid,
+      type: "GET",
+      contentType:false,
+      processData:false,
+      success:function(response)
+      {
+        window.location.reload();
+      },
+      error: function (xhr, status, error) {
+        console.log("there was some error while Updating status");
+      }
+    });
+  };
   </script>
 </body>
 

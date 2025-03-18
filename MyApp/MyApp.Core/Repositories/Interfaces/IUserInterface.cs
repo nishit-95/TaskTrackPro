@@ -9,6 +9,9 @@ namespace MyApp.Core.Repositories.Interfaces
 {
     public interface IUserInterface
     {
+        Task<List<t_task_user>> GetTaskByUserId(int userId);
+
+        Task<int> UpdateStatus(int taskId);
         Task<int> Register(t_User1 user);
         Task<t_User1> Login(vm_Login user);
 

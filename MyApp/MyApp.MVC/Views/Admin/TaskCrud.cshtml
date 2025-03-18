@@ -235,6 +235,7 @@
                 { command: ["edit", "destroy"], title: "&nbsp;", width: "200px" }
             ]
         });
+        $("#taskGrid").data("kendoGrid").dataSource.read();
     });
 
     // Helper Functions
@@ -295,7 +296,7 @@
         }
 
         $.ajax({
-            url: `http://localhost:5112/api/AdminApi/DeleteTask/${taskId}`,
+            url: "http://localhost:5112/api/AdminApi/DeleteTask/${taskId}",
             type: "DELETE",
             success: function () {
                 alert("Task deleted successfully!");
@@ -307,5 +308,5 @@
                 options.error(xhr);
             }
         });
-    }
+    }
 </script>

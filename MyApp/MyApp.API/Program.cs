@@ -25,13 +25,13 @@ builder.Services.AddScoped<ElasticSearchService>();
 builder.Services.AddSingleton<IElasticClient>(client);
 
 builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
-builder.Services.AddSingleton<IRedisService, RedisService>();   
-builder.Services.AddScoped<IUserProfileInterface, UserProfileRepository>();
-builder.Services.AddScoped<IAdminInterface, AdminRepository>();
+builder.Services.AddSingleton<IRedisService, RedisService>();
+builder.Services.AddSingleton<IUserProfileInterface, UserProfileRepository>();
+builder.Services.AddSingleton<IAdminInterface, AdminRepository>();
 
 // Add this line with your other service registrations
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IUserInterface, UserRepository>();
+builder.Services.AddSingleton<IEmailService, EmailService>();
+builder.Services.AddSingleton<IUserInterface, UserRepository>();
 
 
 
@@ -75,17 +75,23 @@ builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 
 
 builder.Services.AddControllers();
-
-
-
-
-
+builder.Services.AddSingleton<NpgsqlConnection>((parameter) =>
+{
+    var ConnectionString = parameter.GetRequiredService<IConfiguration>().GetConnectionString("pgconn");
+    return new NpgsqlConnection(ConnectionString);
+});
+// builder.Services.AddScoped<>
+builder.Services.AddSingleton<IUserProfileInterface, UserProfileRepository>();
+builder.Services.AddSingleton<IAdminInterface, AdminRepository>();
+builder.Services.AddSingleton<IUserInterface, UserRepository>();
 var services = builder.Services;
 services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
     var configuration = builder.Configuration.GetConnectionString("RedisConnection");
     return ConnectionMultiplexer.Connect(configuration);
 });
+builder.Services.AddSingleton<RedisService>();
+builder.Services.AddSingleton<RabbitMQService>();
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(provider =>
 {
