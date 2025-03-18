@@ -1,5 +1,6 @@
 using Elastic.Clients.Elasticsearch;
 using Elastic.Transport;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
 using MyApp.Core.Repositories.Implementations;
 using MyApp.Core.Repositories.Interfaces;
@@ -190,5 +191,7 @@ app.MapControllerRoute(
 
 app.MapControllers();
 app.UseCors("corsapp");
+app.UseStaticFiles();
+
 app.Run();
 

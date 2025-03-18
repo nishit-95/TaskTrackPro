@@ -21,7 +21,7 @@
   <link href="../../App_Themes/Default/css/core-pocket-responsive.css" rel="stylesheet" />
   <link href="../../App_Themes/Default/css/casepoint.comfortable.css" rel="stylesheet" />
   <link href="../../App_Themes/Default/css/kendo.Deeppurple.css" rel="stylesheet" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
 
   <!-- css -->
   <link href="../../App_Themes/Default/css/core-pocket.css" rel="stylesheet" />
@@ -32,7 +32,7 @@
   <div id="load_screen" class="load-screen">
     <div class="pre-loader">
       <div class="loader-content">
-        <h5 class="text-primary">CorePocket</h5>
+        <h5 class="text-primary">TaskTrackPro</h5>
         <button>
           <div class="spinner-border mr-2 align-self-center loader-sm"></div>
           <span>Loading...</span>
@@ -100,7 +100,8 @@
       <div class="main-up">
         <div class="userprofile-content">
           <div class="brief">
-            <div class="img-circle"><span>NP</span></div>
+            <div class="profileLetterDiv img-circle"><span id="imguser"></span></div>
+            <div class="ImgDiv img-circle" id="ViewDiv"><img id="ViewProfileImage" /></div>
           </div>
           <div class="a-box">
             <a id="settings"><i class="icon-setting"></i><span class="text-dark text-semibold">Settings</span></a>
@@ -115,13 +116,6 @@
                 <span class="text-dark d-block ellipsis fs-15" id="lblusername"></span>
               </div>
             </div>
-            @* <div class="userprofile-info d-flex align-items-center">
-              <span class="userprofile-info-icon"><i class="icon-user"></i></span>
-              <div class="flex-1 overflow-hidden font-semi-bold ml-15">
-                <span class="text-muted d-block ellipsis mb-5">Full Name</span>
-                <span class="text-dark d-block ellipsis fs-15">Subhash Dudhat</span>
-              </div>
-            </div> *@
             <div class="userprofile-info d-flex align-items-center">
               <span class="userprofile-info-icon"><i class="icon-email"></i></span>
               <div class="flex-1 overflow-hidden font-semi-bold ml-15">
@@ -130,7 +124,6 @@
               </div>
             </div>
 
-
             <div class="userprofile-info d-flex align-items-center">
               <span class="userprofile-info-icon"><i class="icon-mobile"></i></span>
               <div class="flex-1 overflow-hidden font-semi-bold ml-15">
@@ -138,7 +131,6 @@
                 <span class="text-dark d-block ellipsis fs-15" id="lblmobile"></span>
               </div>
             </div>
-
 
             <div class="userprofile-info d-flex align-items-center">
               <span class="userprofile-info-icon"><i class="icon-location"></i></span>
@@ -178,85 +170,126 @@
           </ul>
           <div>
             <div class="setting-footer">
-              <a class="btn btn-trans close">Close</a>
-              <a class="btn btn-trans ml-0">Reset</a>
-              <a class="btn btn-primary">Update</a>
+              <a class="btn btn-trans close" id="btnCloseprofile">Close</a>
+              <a class="btn btn-trans ml-0" id="btnResetprofile" onclick="resetEventProfile()">Reset</a>
+              <a class="btn btn-primary" id="btnUpdateprofile" onclick="validateDetails()">Update</a>
             </div>
-            <form class="edit-profile">
+
+            <!-- ========== Edit Profile Section ========== -->
+
+            <form class="edit-profile" method="post" enctype="multipart/form-data">
               <div class="brief">
-                <div class="img-circle"><span>NP</span></div>
+                <div class="ImgDiv img-circle" id="EditDiv"><img id="EditProfileImage" /></div>
                 <span class="input-pic">
-                  <input type="file" id="fileProfileImage" name="fileProfileImage" title="Change Photo" />
-                  <i class="icon-photo"></i>Change Photo
+                  <input type="file" id="fileProfileImage" name="fileProfileImage" title="Change Photo"
+                    onchange="previewImage()" style="display: none;color:#7E57C2">
+                  <label for="fileProfileImage" class="file-input-label">
+                    <i class="icon-photo"></i> Change Photo
+                  </label>
                 </span>
-                <a><i class="icon-delete"></i>Reset Photo</a>
+
+                <a onclick="ResetProfile();"><i class="icon-delete"></i>Reset Photo</a>
               </div>
+
               <div class="edit-profile-details">
                 <div class="form-group">
-                  <label>User Name</label>
-                  <input class="form-control" readonly type="text" value="hardik.trada@casepoint.in" />
+                  <input class="form-control" type="hidden" value="" id="userid" />
                 </div>
                 <div class="form-group">
-                  <div class="half">
-                    <label>First Name</label>
-                    <input class="form-control" type="text" value="Hardik" />
-                  </div>
-                  <div class="half">
-                    <label>Last Name</label>
-                    <input class="form-control" type="text" value="Trada" />
-                  </div>
+                  <label>User Name</label>
+                  <input class="form-control" type="text" value="" id="txtuname" onkeyup="validateUserName()" />
+                  <span id="userNameValidateMessage"></span>
                 </div>
+
                 <div class="form-group">
                   <label>Email</label>
-                  <input class="form-control" type="email" readonly value="hardik.trada@casepoint.in" />
+                  <input class="form-control" type="email" readonly value="" id="txtemail" />
                 </div>
                 <div class="form-group">
                   <label>Phone Number</label>
-                  <input class="form-control" type="text" value="9876543210" />
+                  <input class="form-control" type="text" value="" id="txtmobile" onkeyup="validateMobileNumber()" />
+                  <span id="mobileValidateMessage"></span>
                 </div>
                 <div class="form-group">
-                  <label for="drop-list">User Role</label>
-                  <select id="UserRoleDropdown" title="dropdown without search">
-                    <option>Scrum</option>
-                    <option>iAudit</option>
-                    <option>CorPocket</option>
-                  </select>
+                  <label>Address</label>
+                  <input class="form-control" type="text" value="" id="txtaddress" onkeyup="validateAddress()" />
+                  <span id="addressValidateMessage"></span>
                 </div>
               </div>
             </form>
           </div>
+
           <div>
             <div>
+              <!-- changepassword-->
               <form class="edit-profile">
                 <div class="edit-profile-details">
-                  <div class="form-group">
+
+                  <div class="form-group" style="position: relative;">
                     <label>Current Password</label>
-                    <input class="form-control" type="password" placeholder="Current Password" />
+                    <div style="position: relative;">
+                      <input class="form-control" type="password" placeholder="Current Password" id="txtOldPassword"
+                        onkeyup="validateCurrentPassword()" onchange="return validateCurrentPassword()"
+                        style="padding-right: 30px; /* Adjust the padding-right to create space for the icon */" />
+                      <span class="login-textbox-icon"
+                        style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%);">
+                        <i class="k-icon k-i-eye toggle-password1" aria-hidden="true"
+                          onclick="togglePasswordVisibility()"></i>
+                      </span>
+                    </div>
+                    <span id="oldpasswordValidateMessage"></span>
                   </div>
                   <div class="form-group">
-                    <label>New Password
-                      <i class="icon-info-unfill text-muted"></i>
-                    </label>
-                    <input class="form-control" type="password" placeholder="New Password" />
+                    <label>New Password</label>
+                    <div style="position: relative;">
+                      <input class="form-control" type="password" placeholder="New Password" id="txtNewPassword"
+                        onkeyup="validateNewPassword()"
+                        style="padding-right: 30px; /* Adjust the padding-right to create space for the icon */" />
+                      <span class="login-textbox-icon"
+                        style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%);">
+                        <i class="k-icon k-i-eye toggle-password2" aria-hidden="true"
+                          onclick="togglePasswordVisibility1()"></i>
+                      </span>
+                    </div>
+                    <span id="newpasswordValidateMessage"></span>
                   </div>
                   <div class="form-group">
                     <label>Confirm Password</label>
-                    <input class="form-control" type="password" placeholder="Re-type New Password" />
+                    <div style="position: relative;">
+                      <input class="form-control" type="password" placeholder="Re-type New Password"
+                        id="txtConfirmPassword" onkeyup="validateConfirmPassword()"
+                        style="padding-right: 30px; /* Adjust the padding-right to create space for the icon */" />
+                      <span class="login-textbox-icon"
+                        style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%);">
+                        <i class="k-icon k-i-eye toggle-password3" aria-hidden="true"
+                          onclick="togglePasswordVisibility2()"></i>
+                      </span>
+                    </div>
+                    <span id="copasswordValidateMessage"></span>
                   </div>
                 </div>
               </form>
             </div>
+            <div id="notification" style="display: none; color: green; margin-top: 10px;"></div>
             <div class="setting-footer">
-              <a class="btn btn-trans close">Close</a>
-              <a class="btn btn-trans ml-0">Reset</a>
-              <a class="btn btn-primary">Save</a>
-            </div>
+              <a class="btn btn-trans close" id="btnClose">Close</a>
+              <a class="btn btn-trans ml-0" id="btnReset" onclick="resetEvent()">Reset</a>
+              <a class="btn btn-primary" id="btnSave" onclick="validatePassword()">Save</a>
+            </div>        
           </div>
-        </div>
-        <!--  -->
+        </div>        
       </div>
     </div>
   </div>
+
+<div class="notification-box success" id="user-update-notification" style="display: block;">
+    <div class="notification-alert success user-update">
+      <div class="pull-left"><i class="icon-check" aria-hidden="true"></i></div>
+      <div class="pull-right" role="alert" aria-label="Success">
+      </div>
+    </div>
+  </div>
+
   <!-- end user profile -->
   <!-- main content -->
   <div class="main-content">
@@ -308,11 +341,16 @@
       </div>
     </script>
 
+
+  <!-- #region Scripts-->
+
   <!-- scripts -->
   <script src="../../Scripts/Kendo/jquery.min.js"></script>
   <script src="../../Scripts/Kendo/kendo.all.min.js"></script>
   <script src="../../Scripts/CLARENT/Other/Custom/Custom.js"></script>
+  <script src="../../js/UserProfile.js"></script>
   <script>
+
     $(document).ready(function () {
       var email = "v@gmail.com";
      
@@ -484,5 +522,4 @@
   };
   </script>
 </body>
-
 </html>
