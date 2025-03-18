@@ -10,5 +10,8 @@ namespace MyApp.Core.Repositories.Interfaces
     {
         Task<vm_UserProfile> GetOneUser(string email);
         Task<int> Update(vm_UserProfile user);
+
+        Task<int> ResetPassword(vm_UserProfile user, string currentPassword);
+
     }
 }

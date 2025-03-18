@@ -1,5 +1,6 @@
 using Elastic.Clients.Elasticsearch;
 using Elastic.Transport;
+using Microsoft.Extensions.FileProviders;
 using MyApp.Core.Repositories.Implementations;
 using MyApp.Core.Repositories.Interfaces;
 using MyApp.Core.Services;
@@ -118,6 +119,8 @@ app.MapGet("/weatherforecast", () =>
 .WithOpenApi();
 app.MapControllers();
 app.UseCors("corsapp");
+app.UseStaticFiles();
+
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
