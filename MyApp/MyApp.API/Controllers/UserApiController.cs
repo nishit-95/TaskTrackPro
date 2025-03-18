@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using MyApp.Core.Models;
+using MyApp.Core.Repositories.Interfaces;
 using MyApp.Core.Services;
 using Npgsql;
 
@@ -11,18 +12,20 @@ namespace MyApp.API.Controllers
 {
     [ApiController]
     [Route("api/tasks")]
+    [Route("api/[controller]")]
     public class UserApiController : ControllerBase
     {
         private readonly NpgsqlConnection _conn;
 
         private readonly ElasticSearchService _elasticSearchService;
         private readonly RabbitMQService _rabbitMQService;
-
-        public UserApiController(ElasticSearchService elasticSearchService, RabbitMQService rabbitMQService, NpgsqlConnection conn)
+        private readonly IUserInterface _userRepo;
+        public UserApiController(ElasticSearchService elasticSearchService, RabbitMQService rabbitMQService, NpgsqlConnection conn,IUserInterface userRepo)
         {
             _elasticSearchService = elasticSearchService;
             _rabbitMQService = rabbitMQService;
             _conn = conn;
+            _userRepo = userRepo;
         }
 
         [HttpPost("index")]
@@ -94,6 +97,170 @@ namespace MyApp.API.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpPost]
+[Route("Register")]
+public async Task<IActionResult> Register([FromForm] t_User1 user)
+{
+    if (!ModelState.IsValid)
+    {
+        var errors = ModelState.Values.SelectMany(v => v.Errors)
+            .Select(e => e.ErrorMessage)
+            .ToList();
+        return BadRequest(new { success = false, message = "Invalid input", errors });
+    }
+
+    try
+    {
+        if (user.ProfilePicture != null && user.ProfilePicture.Length > 0)
+        {
+            if (user.ProfilePicture.Length > 5 * 1024 * 1024) // 5MB limit
+                return BadRequest(new { success = false, message = "Profile picture must not exceed 5MB" });
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+            var extension = Path.GetExtension(user.ProfilePicture.FileName).ToLower();
+            if (!allowedExtensions.Contains(extension))
+                return BadRequest(new { success = false, message = "Only .jpg, .jpeg, and .png files are allowed" });
+
+            var fileName = user.c_email + extension;
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Profile_Pictures", fileName);
+            user.c_image = fileName;
+
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await user.ProfilePicture.CopyToAsync(stream);
+            }
+        }
+        else
+        {
+            user.c_image = null;
+        }
+        user.c_role = "User";
+        var status = await _userRepo.Register(user);
+
+        if (status == 1)
+        {
+            return Ok(new { success = true, message = "User Registered" });
+        }
+        else if (status == 0)
+        {
+            return Ok(new { success = false, message = "User Already Exists" });
+        }
+        else
+        {
+            return BadRequest(new { success = false, message = "There was some error during registration" });
+        }
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { success = false, message = $"Server error: {ex.Message}" });
+    }
+}
+
+ [HttpPost]
+[Route("Login")]
+public async Task<IActionResult> Login([FromBody] vm_Login user)
+{
+    if (!ModelState.IsValid)
+    {
+        var errors = ModelState.Values.SelectMany(v => v.Errors)
+            .Select(e => e.ErrorMessage)
+            .ToList();
+        return BadRequest(new { success = false, message = "Invalid input", errors });
+    }
+
+    // Static Admin Login - Hardcoded admin handling
+    if (user.c_email == "admin@example.com" && user.c_password == "Admin@123")
+    {
+        var adminUser = new t_User1
+        {
+            c_userId = 1,
+            c_userName = "Admin",
+            c_email = "admin@example.com",
+            c_password = "[PROTECTED]",
+            c_role = "Admin",
+            c_status = "Active"
+        };
+
+        return Ok(new { success = true, message = "Login Successful", role = adminUser.c_role, UserData = adminUser });
+    }
+
+    // Fetch user from database
+    t_User1 UserData = await _userRepo.Login(user);
+
+    if (UserData == null || UserData.c_userId == 0)
+    {
+        var existingUser = await _userRepo.GetUserByEmail(user.c_email);
+        if (existingUser != null && existingUser.c_status == "Pending")
+        {
+            return Ok(new { success = false, message = "Your account is pending approval. Please wait for admin approval." });
+        }
+        return BadRequest(new { success = false, message = "Invalid email or password" });
+    }
+
+    return Ok(new { success = true, message = "Login Successful", role = UserData.c_role, UserData });
+}
+
+
+        [HttpPost]
+        [Route("ForgotPassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Email))
+            {
+                return BadRequest(new { success = false, message = "Email is required" });
+            }
+
+            try
+            {
+                var result = await _userRepo.InitiatePasswordReset(request.Email);
+                
+                if (result.success)
+                {
+                    // In a production environment, you would NOT return the token
+                    // But for development/testing, it's helpful
+                    return Ok(new { success = true, message = result.message, token = result.token });
+                }
+                else
+                {
+                    return BadRequest(new { success = false, message = result.message });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Server error: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
+        [Route("ResetPassword")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Token) || string.IsNullOrEmpty(request.NewPassword))
+            {
+                return BadRequest(new { success = false, message = "Email, token, and new password are required" });
+            }
+
+            try
+            {
+                var result = await _userRepo.ResetPassword(request.Email, request.Token, request.NewPassword);
+                
+                if (result.success)
+                {
+                    return Ok(new { success = true, message = result.message });
+                }
+                else
+                {
+                    return BadRequest(new { success = false, message = result.message });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Server error: {ex.Message}" });
             }
         }
 

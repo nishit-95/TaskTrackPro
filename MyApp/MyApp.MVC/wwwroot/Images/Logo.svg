@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 200">
+  <!-- Checklist Icon -->
+  <g fill="none" stroke="#0077B6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Clipboard outline -->
+    <rect x="100" y="40" width="100" height="140" rx="10" ry="10" />
+    <!-- Clipboard top -->
+    <path d="M125 40 V 25 H 175 V 40" />
+    <!-- Checkmarks and lines -->
+    <line x1="120" y1="70" x2="180" y2="70" />
+    <polyline points="120,100 130,110 145,90" />
+    <line x1="155" y1="100" x2="180" y2="100" />
+    <polyline points="120,130 130,140 145,120" />
+    <line x1="155" y1="130" x2="180" y2="130" />
+    <polyline points="120,160 130,170 145,150" />
+    <line x1="155" y1="160" x2="180" y2="160" />
+  </g>
+
+  <!-- Text -->
+  <g fill="#0077B6">
+    <text x="220" y="100" font-family="Arial, sans-serif" font-weight="bold" font-size="40">TaskTrack</text>
+    <text x="220" y="140" font-family="Arial, sans-serif" font-weight="bold" font-size="40" fill="#00B4D8">Pro</text>
+  </g>
+</svg>
