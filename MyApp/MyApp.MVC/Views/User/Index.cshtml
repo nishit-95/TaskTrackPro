@@ -325,7 +325,6 @@
           method: "GET",
           success: function (data) {
             console.log(data);
-            debugger;
             if (data != null) {
               console.log("data is not null");
               $("#userid").val(data.c_userid);
@@ -427,7 +426,7 @@
       dataSource: {
         transport: {
             read: {
-                url: "http://localhost:5112/api/tasks/GetTaskByUserId/12",  // 🔹 Replace with your API endpoint
+                url: "http://localhost:5112/api/tasks/GetTaskByUserId/1",  // 🔹 Replace with your API endpoint
                 dataType: "json" // Expect JSON response
             }
         },
@@ -459,16 +458,16 @@
         { field: "c_Status", title: "Status", width: "200px", template: "#= c_Status == 'Completed' ? '✅ Done' : '⏳ Pending' #" },
         {
             title: "Mark As Done",
-            template: `<button class='k-button k-button-solid-error' onclick='UpdateStatus(#=c_Taskid#)'>✔ Complete</button>`,
+            template: `<button class='k-button k-button-solid-error' onclick='UpdateStatus(#=c_Taskid#,#=c_Userid#)'>✔ Complete</button>`,
             width: 150
         }
     ]
   });
-  function UpdateStatus(id)
+  function UpdateStatus(taskid,userid)
   {
-    console.log(id);
+    console.log(taskid);
     $.ajax({
-      url: "http://localhost:5112/api/tasks/UpdateStatus/" + id,
+      url: "http://localhost:5112/api/tasks/UpdateStatus/" + taskid + "/" + userid,
       type: "GET",
       contentType:false,
       processData:false,

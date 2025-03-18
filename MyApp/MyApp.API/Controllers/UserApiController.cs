@@ -32,6 +32,8 @@ namespace MyApp.API.Controllers
         [HttpGet]
         [Route("GetTaskByUserId/{userId}")]
 
+
+        #region task actions
         public async Task<IActionResult> GetTaskByUserId(int userId)
         {
             List<t_task_user> taskList = await _redisService.GetTaskList(userId);
@@ -50,9 +52,10 @@ namespace MyApp.API.Controllers
         }
 
         [HttpGet]
-        [Route("UpdateStatus/{taskId}")]
-        public async Task<IActionResult> UpdateStatus(int taskId)
+        [Route("UpdateStatus/{taskId}/{userId}")]
+        public async Task<IActionResult> UpdateStatus(int taskId, int userId)
         {
+            System.Console.WriteLine(userId);
             var status = await _userServices.UpdateStatus(taskId);
             if (status == 0)
             {
@@ -60,6 +63,8 @@ namespace MyApp.API.Controllers
             }
             else if (status == 1)
             {
+                List<t_task_user> taskList = await _userServices.GetTaskByUserId(userId);
+                _redisService.SetTaskList(userId, taskList);
                 return Ok("Status Updated Successfully");
             }
             else
@@ -67,6 +72,8 @@ namespace MyApp.API.Controllers
                 return BadRequest("From User API Controller : There was some error while updating the status");
             }
         }
+
+        #endregion
 
         [HttpPost("index")]
         public async Task<IActionResult> IndexTask([FromBody] t_task task)
