@@ -1,6 +1,9 @@
 
 
-var email = "v@gmail.com";
+var email = localStorage.getItem("userEmail");
+    function logoutUser() {
+        localStorage.clear();
+    }
 
 $(document).ready(function () {
     LoadProfile(email);
