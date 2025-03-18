@@ -9,33 +9,47 @@ using StackExchange.Redis;
 
 namespace MyApp.Core.Services
 {
-    public class RedisService
+    public interface IRedisService
     {
-        private readonly IConnectionMultiplexer _redis;
+        Task Set(string key, string value);
+        Task<string> Get(string key);
+    }
 
-        private readonly IUserInterface _userServices;
-        public RedisService(IConnectionMultiplexer redis, IUserInterface userInterface)
+    public class RedisService : IRedisService
+    {
+        private readonly IDatabase _database;
+
+        public RedisService(IDatabase database)
         {
-            _redis = redis;
-            _userServices = userInterface;
+            _database = database;
         }
+
+        public async Task<string> Get(string key)
+        {
+            return await _database.StringGetAsync(key);
+        }
+
+        public async Task Set(string key, string value)
+        {
+            await _database.StringSetAsync(key, value);
+        }
+
 
         public void SetTaskList(int userId, List<t_task_user> taskData)
         {
-            var db = _redis.GetDatabase();
             string json = JsonSerializer.Serialize(taskData);
-            db.StringSet($"TaskList:{userId}", json);
+            _database.StringSet($"TaskList:{userId}", json);
         }
 
         public async Task<List<t_task_user>> GetTaskList(int userId)
         {
-            var db = _redis.GetDatabase();
-            string json = await db.StringGetAsync($"TaskList:{userId}");
+            string json = await _database.StringGetAsync($"TaskList:{userId}");
             if (json == null)
             {
                 return new List<t_task_user>();
             }
             return JsonSerializer.Deserialize<List<t_task_user>>(json);
         }
+
     }
 }

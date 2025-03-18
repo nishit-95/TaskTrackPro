@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json;
 using Npgsql;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -41,12 +42,27 @@ namespace MyApp.Core.Services
             consumer.Received += (model, ea) =>
             {
                 var body = ea.Body.ToArray();
-                var message = Encoding.UTF8.GetString(body);
+                var jsonMessage = Encoding.UTF8.GetString(body);
 
-                Console.WriteLine($"[Notification Received]: {message}");
+                Console.WriteLine($"[Notification Received]: {jsonMessage}");
 
-                // Save the notification into PostgreSQL
-                SaveNotificationToDatabase(message);
+                try
+                {
+                    // 🔹 Deserialize JSON
+                    var notificationData = JsonConvert.DeserializeObject<NotificationModel>(jsonMessage);
+                    if (notificationData != null)
+                    {
+                        SaveNotificationToDatabase(notificationData.Title, notificationData.UserId);
+                    }
+                    else
+                    {
+                        Console.WriteLine("[Error] Unable to parse JSON message.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Deserialization Error]: {ex.Message}");
+                }
             };
 
             _channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
@@ -54,25 +70,35 @@ namespace MyApp.Core.Services
             return Task.CompletedTask;
         }
 
-        private void SaveNotificationToDatabase(string message)
+        private void SaveNotificationToDatabase(string title, int userId)
         {
             try
             {
                 using var conn = new NpgsqlConnection(_connectionString);
                 conn.Open();
 
-                string sql = "INSERT INTO t_notification (c_title, c_taskId, c_userId) VALUES (@title, NULL, NULL)";
+                string sql = "INSERT INTO t_notification (c_title, c_userId) VALUES (@title, @userId)";
 
                 using var cmd = new NpgsqlCommand(sql, conn);
-                cmd.Parameters.AddWithValue("@title", message);
+                cmd.Parameters.AddWithValue("@title", title);
+                cmd.Parameters.AddWithValue("@userId", userId);
 
                 cmd.ExecuteNonQuery();
+
+                Console.WriteLine($"[Database] Notification saved: Title={title}, UserId={userId}");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[Database Error]: {ex.Message}");
             }
         }
+
+        public class NotificationModel
+        {
+            public string Title { get; set; }
+            public int UserId { get; set; }
+        }
+
 
         public override void Dispose()
         {

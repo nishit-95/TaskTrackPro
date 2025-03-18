@@ -4,140 +4,38 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - MyApp.MVC</title>
-      <!--<link rel="shortcut icon" href="../../App_Themes/Default/images/favicon.ico" type="image/x-icon">-->
+      
 
-      <link href="../../App_Themes/Default/css/kendo.common.min.css" rel="stylesheet" />
-      <link href="../../App_Themes/Default/css/kendo.default.min.css" rel="stylesheet" />
-      <link href="../../App_Themes/Default/css/fonts.css" rel="stylesheet" />
-      <link href="../../App_Themes/Default/css/styleguide.css" rel="stylesheet" />
-      <link href="../../App_Themes/Default/css/core-pocket-responsive.css" rel="stylesheet" />
-      <link href="../../App_Themes/Default/css/casepoint.comfortable.css" rel="stylesheet" />
-      <link href="../../App_Themes/Default/css/kendo.Deeppurple.css" rel="stylesheet" />
-  
-      <!-- css -->
-      <link href="../../App_Themes/Default/css/core-pocket.css" rel="stylesheet" />
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/MyApp.MVC.styles.css" asp-append-version="true" />
-    <style>
-        /* Notification container inside navbar */
-        .notification-item {
-            position: relative;
-        }
-    
-        /* Counter badge */
-        .counts {
-            position: absolute;
-            top: -5px;
-            right: -10px;
-            font-size: 12px;
-            padding: 3px 6px;
-            border-radius: 50%;
-            display: none; /* Initially hidden */
-        }
-    
-        /* Notification panel */
-        .notification-panel {
-            display: none;
-            position: absolute;
-            top: 40px;
-            right: 0;
-            width: 300px;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            padding: 10px;
-            z-index: 1000;
-        }
-    
-        .notification-panel ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 200px;
-            overflow-y: auto;
+    <!-- ✅ Favicon -->
+    <!-- <link rel="shortcut icon" href="../../App_Themes/Default/images/favicon.ico" type="image/x-icon"> -->
 
-        }
-    
-        .notification-panel ul li {
-            padding: 8px;
-            border-bottom: 1px solid #eee;
-            color: black !important; /* Ensure text is black */
-            font-weight: bold;
-        }
-    
-        .notification-panel ul li:last-child {
-            border-bottom: none;
-        }
-        #notificationsList li {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #f8f9fa;
-            padding: 8px 10px;
-            margin-bottom: 5px;
-            border-radius: 5px;
-            font-size: 14px;
-            border-left: 4px solid #7e57c2; /* Purple highlight */
-            white-space: nowrap;
-        }
-        
-        .mark-read-btn {
-            background-color: #7e57c2 !important;
-            border: none;
-            color: white;
-            padding: 4px 6px;
-            font-size: 14px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 10px; /* Add space between text and button */
-        }
-        
-        #notificationsList {
-            padding: 0;
-            margin: 0;
-            max-height: 250px;
-            overflow-y: auto;
-        }
-        
-    </style>
-    
+    <!-- ✅ Kendo UI & Custom CSS Files -->
+    <link href="../../App_Themes/Default/css/kendo.common.min.css" rel="stylesheet">
+    <link href="../../App_Themes/Default/css/kendo.default.min.css" rel="stylesheet">
+    <link href="../../App_Themes/Default/css/kendo.Deeppurple.css" rel="stylesheet">
+    <link href="../../App_Themes/Default/css/fonts.css" rel="stylesheet">
+    <link href="../../App_Themes/Default/css/styleguide.css" rel="stylesheet">
+    <link href="../../App_Themes/Default/css/core-pocket-responsive.css" rel="stylesheet">
+    <link href="../../App_Themes/Default/css/core-pocket.css" rel="stylesheet">
+    <link href="../../App_Themes/Default/css/casepoint.comfortable.css" rel="stylesheet">
+
+    <!-- ✅ Bootstrap CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css">
+
+    <!-- ✅ Site CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/MyApp.MVC.styles.css" asp-append-version="true">
+
+    <!-- ✅ Local Kendo UI CSS -->
+    <link rel="stylesheet" href="~/lib/kendo/kendo.default-v2.min.css" asp-append-version="true">
+
+    <!-- ✅ Essential Scripts (Load First) -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/kendo/kendo.all.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
 </head>
 <body>
-    <!-- <header>
-
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">MyApp.MVC</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Notification">Notification</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="GetDocuments">GetDocuments</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="GetPendingUser">
-                                User <span id="pendingUserCounter" class="badge bg-danger">0</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header> -->
     <header class="main-header">
         <nav class="mt-navbar">
             <div class="nav-left" id="dvLeftMenu" data-role="aratooltipv2">
@@ -156,13 +54,6 @@
                             <span class="icon"><i class="icon-help"></i></span>
                         </a>
                     </li>
-                    <!-- <li class="notification-item item">
-                        <a href="javascript:void(0)">
-                            <span class="icon"><i class="icon-notification"></i></span>
-                            <span class="counts">12</span>
-                        </a>
-                    </li> -->
-
                     <li class="notification-item item">
                         <a href="javascript:void(0)" id="notificationBell">
                             <span class="icon"><i class="icon-notification"></i></span>
@@ -175,12 +66,6 @@
                         </div>
                     </li>
                     <li class="separator"></li>
-                    <!-- <li class="userprofile-item userprofile dropdown">
-                        <a href="javascript:void(0)">
-                            <span class="navuser-ellipse">htrada@casepoint.in<br /><small>Space Admin</small></span>
-                            <span class="dw-icon"><i class="icon-arrow-down"></i></span>
-                        </a>
-                    </li> -->
                 </ul>
             </div>
         </nav>
@@ -196,9 +81,17 @@
                 <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="">Task</a>
             </li>
             <li>
-                <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="">User List</a>
+                <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="UserList">User List</a>
+            </li>
+
+             <li>
+                <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="TaskCrud">User Task Crud</a>
+            </li>
+             <li>
+                <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Chat">Chat</a>
             </li>
           
+
             <li>
                 <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="GetPendingUser">
                     User Approval <span id="pendingUserCounter" class="badge bg-danger">0</span>
@@ -217,14 +110,9 @@
         </main>
     </div>
 
-    <!-- <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - MyApp.MVC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer> -->
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../Scripts/CLARENT/Other/Custom/Custom.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     <script>
         $(document).ready(function () {
             let notificationCount = 0;
@@ -313,6 +201,7 @@
             });
         });
     </script>
+    
     <script type="text/x-kendo-template" id="thumnail_template">
         <div class="thumbnail-item">
             <div class="thumbnail-item-wrapper">
@@ -339,11 +228,7 @@
             </div>
         </div>
     </script>
-
-    <!-- scripts -->
-    <script src="../../Scripts/Kendo/jquery.min.js"></script>
-    <script src="../../Scripts/Kendo/kendo.all.min.js"></script>
-    <script src="../../Scripts/CLARENT/Other/Custom/Custom.js"></script>
+    
     <script>
         $(document).ready(function () {
 
@@ -388,7 +273,6 @@
 
         });
     </script>
-   
     
     @await RenderSectionAsync("Scripts", required: false)
 </body>

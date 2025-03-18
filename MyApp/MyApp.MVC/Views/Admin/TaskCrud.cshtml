@@ -1,0 +1,311 @@
+@{
+    ViewData["Title"] = "Task List";
+    Layout = "../Shared/_AdminLayout.cshtml";
+}
+
+
+
+
+<div class="container mt-4">
+    <h2 class="mb-4 text-primary">Assign Task</h2>
+
+    <!-- Task Assignment Form -->
+    <form id="taskForm" class="bg-white p-4 rounded shadow-sm">
+        <div class="form-group mb-3">
+            <label for="userDropdown" class="form-label">Select User:</label>
+            <input id="userDropdown" class="form-control" style="width: 100%;" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="taskTitle" class="form-label">Task Title:</label>
+            <input id="taskTitle" class="form-control" style="width: 100%;" required />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="taskDescription" class="form-label">Description:</label>
+            <textarea id="taskDescription" class="form-control" style="width: 100%;" rows="3" required></textarea>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="estimatedDays" class="form-label">Estimated Days:</label>
+                <input id="estimatedDays" class="form-control" style="width: 100%;" />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="status" class="form-label">Status:</label>
+                <input id="status" class="form-control" style="width: 100%;" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="startDate" class="form-label">Start Date:</label>
+                <input id="startDate" class="form-control" style="width: 100%;" />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="endDate" class="form-label">End Date:</label>
+                <input id="endDate" class="form-control" style="width: 100%;" />
+            </div>
+        </div>
+
+        <button id="submitTask" class="btn btn-primary w-100 mt-3">Assign Task</button>
+    </form>
+
+    <hr class="my-4" />
+
+    <h2 class="mb-4 text-primary">All Tasks</h2>
+</div>
+
+<style>
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .form-control:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+    
+    .k-dropdown {
+        width: 100% !important;
+    }
+</style>
+<div id="taskGrid"></div>
+
+<style>
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .form-control:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+    
+    .k-dropdown {
+        width: 100% !important;
+    }
+
+    /* Kendo Grid Styles */
+    .k-grid {
+        border-color: #e4e7eb;
+        font-size: 14px;
+    }
+
+    .k-grid th {
+        background-color: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .k-grid td {
+        border-color: #e4e7eb;
+        padding: 8px 12px;
+    }
+
+    .k-grid tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .k-grid .k-button {
+        margin: 2px;
+        padding: 4px 8px;
+    }
+
+    .k-grid-header {
+        background-color: #f8f9fa;
+    }
+
+    .k-pager-wrap {
+        background-color: #f8f9fa;
+        padding: 8px;
+    }
+</style>
+
+
+<script>
+    $(document).ready(function () {
+        // Load Users into DropDownList
+        $("#userDropdown").kendoDropDownList({
+            optionLabel: "Select User",
+            dataTextField: "userName",
+            dataValueField: "userId",
+            dataSource: {
+                transport: {
+                    read: {
+                        url: "http://localhost:5112/api/AdminApi/GetAllUser",
+                        dataType: "json"
+                    }
+                }
+            }
+        });
+
+        // Initialize Form Components
+        $("#taskTitle").kendoTextBox();
+        $("#taskDescription").kendoTextArea();
+        $("#estimatedDays").kendoNumericTextBox();
+        $("#startDate").kendoDatePicker();
+        $("#endDate").kendoDatePicker();
+        $("#status").kendoDropDownList({
+            dataSource: ["Pending", "Completed", "Incompleted"],
+            optionLabel: "Select Status"
+        });
+        $("#document").kendoTextBox();
+
+        // Submit Task
+        $("#submitTask").kendoButton({
+            click: function () {
+                var taskData = {
+                    userId: $("#userDropdown").val(),
+                    title: $("#taskTitle").val(),
+                    description: $("#taskDescription").val(),
+                    estimatedDays: $("#estimatedDays").val(),
+                    startDate: kendo.toString($("#startDate").data("kendoDatePicker").value(), "yyyy-MM-dd"),
+                    endDate: kendo.toString($("#endDate").data("kendoDatePicker").value(), "yyyy-MM-dd"),
+                    status: $("#status").val(),
+                };
+
+                $.ajax({
+                    url: "http://localhost:5112/api/AdminApi/AssignTask",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(taskData),
+                    success: function () {
+                        alert("Task Assigned Successfully!");
+                        $("#taskGrid").data("kendoGrid").dataSource.read();
+                    },
+                    error: function (xhr, error) {
+                        console.log(error);
+                        console.log(xhr.responseText);
+                    }
+                });
+            }
+        });
+
+        // Initialize Kendo Grid
+        $("#taskGrid").kendoGrid({
+            dataSource: {
+                transport: {
+                    read: function (options) {
+                        fetchTasks(options);
+                    },
+                    update: function (options) {
+                        updateTask(options);
+                    },
+                    destroy: function (options) {
+                        deleteTask(options);
+                    }
+                },
+                schema: {
+                    model: {
+                        id: "taskId",
+                        fields: {
+                            taskId: { type: "number" },
+                            userName: { type: "string" },
+                            title: { type: "string" },
+                            description: { type: "string" },
+                            estimatedDays: { type: "number" },
+                            startDate: { type: "date" },
+                            endDate: { type: "date" },
+                            status: { type: "string" },
+                            document: { type: "string" }
+                        }
+                    }
+                },
+                pageSize: 10
+            },
+            height: 400,
+            pageable: true,
+            editable: "inline",
+            columns: [
+                { field: "taskId", title: "Task ID", width: "50px" },
+                { field: "userName", title: "Assigned User", width: "150px", editable: false },
+                { field: "title", title: "Task Title", width: "150px" },
+                { field: "description", title: "Description", width: "200px" },
+                { field: "estimatedDays", title: "Days", width: "80px" },
+                { field: "startDate", title: "Start Date", format: "{0:yyyy-MM-dd}", width: "100px" },
+                { field: "endDate", title: "End Date", format: "{0:yyyy-MM-dd}", width: "100px" },
+                { field: "status", title: "Status", width: "120px" },
+                { field: "document", title: "Document", width: "150px" },
+                { command: ["edit", "destroy"], title: "&nbsp;", width: "200px" }
+            ]
+        });
+    });
+
+    // Helper Functions
+    function fetchTasks(options) {
+        $.ajax({
+            url: "http://localhost:5112/api/AdminApi/GetAllTask",
+            type: "GET",
+            dataType: "json",
+            success: function (response) {
+                options.success(response);
+            },
+            error: function (xhr) {
+                console.error("Failed to fetch tasks:", xhr.responseText);
+                options.error(xhr);
+            }
+        });
+    }
+
+    function updateTask(options) {
+        var data = options.data;
+        
+        // Create the updated task object
+        var updatedTask = {
+            taskId: data.taskId,
+            title: data.title,
+            description: data.description,
+            estimatedDays: data.estimatedDays,
+            startDate: kendo.toString(new Date(data.startDate), "yyyy-MM-dd"),
+            endDate: kendo.toString(new Date(data.endDate), "yyyy-MM-dd"),
+            status: data.status,
+        };
+
+        // Send update request
+        $.ajax({
+            url: "http://localhost:5112/api/AdminApi/UpdateTask",
+            type: "PUT", 
+            contentType: "application/json",
+            data: JSON.stringify(updatedTask),
+            success: function (result) {
+                options.success();
+                $("#taskGrid").data("kendoGrid").dataSource.read();
+                alert("Task updated successfully!");
+            },
+            error: function (xhr, status, error) {
+                console.error("Update failed:", xhr.responseText);
+                options.error(xhr);
+                alert("Failed to update task. Error: " + error);
+            }
+        });
+    }
+
+    function deleteTask(options) {
+        var taskId = options.data.taskId;
+        
+        if (!taskId) {
+            console.error("taskId is undefined");
+            return;
+        }
+
+        $.ajax({
+            url: `http://localhost:5112/api/AdminApi/DeleteTask/${taskId}`,
+            type: "DELETE",
+            success: function () {
+                alert("Task deleted successfully!");
+                options.success();
+            },
+            error: function (xhr) {
+                console.error("Delete failed:", xhr.responseText);
+                alert("Failed to delete task.");
+                options.error(xhr);
+            }
+        });
+    }
+</script>

@@ -1,0 +1,186 @@
+@{
+    ViewData["Title"] = "Chat";
+    Layout = "../Shared/_AdminLayout.cshtml";
+}
+<style>
+    #chatbox {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        height: 400px;
+        overflow-y: auto;
+        margin-top: 20px;
+    }
+
+    .message {
+        max-width: 70%;
+        padding: 10px;
+        border-radius: 10px;
+        word-wrap: break-word;
+    }
+
+    .sender {
+        align-self: flex-start;
+        background-color: #e1f5fe;
+        /* Light blue for sender */
+    }
+
+    .receiver {
+        align-self: flex-end;
+        background-color: #f5f5f5;
+        /* Light gray for receiver */
+    }
+</style>
+
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Welcome : username</h1>
+    <div class="row">
+
+        <div class="col-md-6" style="width: 100vw; margin-bottom: 1px;">
+            <h2></h2>
+            <form id="sendMessageForm">
+                <div
+                    style="width:auto; display: flex; flex-direction: row; border: 1px solid black; justify-content: space-between; padding: 10px;">
+                    <div class="mb-2" style="width: 50%; margin-right: 1%;">
+                        <label for="queueName" class="form-label"><b>Write Message :</b></label>
+                        <div class="mb-3">
+                            <textarea class="form-control" id="message" rows="3" placeholder="Enter your message"
+                                required></textarea>
+                        </div>
+                    </div>
+
+
+                    <div class="mb-3" style="width: 50%; margin-left: 1%;">
+                        <label for="senderName" class="form-label"><b>Receiver Name</b></label>
+                        <select class="form-control" id="senderName" required>
+                            <option value="">Select a user</option>
+                        </select>
+                    </div>
+                </div>
+                <input type="hidden" name="username" id="username" />
+                <button type="submit" style="margin:3px;" class="btn btn-primary">Send Message</button>
+            </form>
+            <div id="sendMessageResult" class="mt-3"></div>
+        </div>
+
+    </div>
+</div>
+
+<h6>Chat Box</h6>
+<div id="chatbox">
+
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        const senderId = 0;
+        const senderUsername = "John";
+        let receiverName = '';
+        $(document).ready(function () {
+
+            document.getElementById('senderName').addEventListener('change', function () {
+                var selectedText = this.options[this.selectedIndex].text;
+                document.getElementById('username').value = selectedText;
+                receiverName = $('#username').val();
+
+
+            });
+
+            $.ajax({
+                url: "http://localhost:5112/api/AdminApi/GetAllUser",
+                method: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    console.log(response);
+                    const dropdown = $('#senderName');
+                    dropdown.empty();
+                    dropdown.append('<option value="">Select a user</option>');
+                    $.each(response, function (key, entry) {
+
+                        dropdown.append($('<option></option>').attr('value', entry.userId).text(entry.userName));
+                    })
+                }, error: function (error) {
+                    console.log(error);
+                }
+            }, 2000);
+
+
+            $('#sendMessageForm').on('submit', function (e) {
+                e.preventDefault();
+                const message = $('#message').val();
+
+                console.log("message:" + message);
+                console.log("Sender username : " + senderUsername);
+                console.log("Sender Id : " + senderId);
+                console.log("Receiver Name : " + receiverName);
+
+                $.ajax({
+                    url: "http://localhost:5112/api/AdminApi/send?queueName=" + senderUsername + "&Receiver=" + receiverName,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(message),
+                    success: function (response) {
+                        console.log("Message sent successfully");
+                        console.log(response);
+                    },
+                    error: function (error) {
+                        console.log("error receiving message:", error.responseText);
+                        $('#sendMessageResult').html(`<div class="alert alert-danger">${error.responseJSON}</div>`);
+
+                    }
+                })
+
+                $.ajax({
+                    url: "http://localhost:5112/api/AdminApi/send?queueName=" + receiverName + "&Receiver=" + receiverName,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(message),
+                    success: function (response) {
+                        console.log("Message sent successfully");
+                    },
+                    error: function (error) {
+                        console.log("error receiving message:", error.responseText);
+                        $('#sendMessageResult').html(`<div class="alert alert-danger">${error.responseJSON}</div>`);
+
+                    }
+                });
+                console.log("fetch function is called.")
+
+            });
+
+            function fetchMessages_At_Every_two_Seconds() {
+                $.ajax({
+                    //http://localhost:5112/api/AdminApi/receive?que    ueName=Admin&redisKey=asd
+                    url: "http://localhost:5112/api/AdminApi/receive?queueName=" + receiverName + "&redisKey=" + "sbc",
+                    type: 'get',
+                    success: function (response) {
+
+                        console.log("sender : " + response.sender);
+                        if (response.sender !== senderUsername) {
+                            // Display the message on the left (sender's side)
+                            $('#chatbox').append(`<div class="message sender">You: ${response.message}</div>`);
+                        } else {
+                            // Display the message on the right (receiver's side)
+                            $('#chatbox').append(`<div class="message receiver">${receiverName}: ${response.message}</div>`);
+                        }
+
+                    },
+                    error: function (error) {
+                        // Display error message if the request fails
+                        console.log("Error receiving messages: ", error.responseText);
+                    }
+                });
+            }
+            $('#message').val('');
+
+
+
+            setInterval(fetchMessages_At_Every_two_Seconds, 2000)
+        })
+
+
+    </script>
+}
