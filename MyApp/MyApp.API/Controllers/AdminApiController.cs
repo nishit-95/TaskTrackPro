@@ -20,10 +20,12 @@ namespace MyApp.API.Controllers
         private readonly string _connectionString;
 
 
-        public AdminApiController(IConfiguration configuration, IAdminInterface admin)
+        public AdminApiController(IConfiguration configuration, IAdminInterface admin, IRabbitMQService rabbitMQService, IRedisService redisService)
         {
             _admin = admin;
             _connectionString = configuration.GetConnectionString("pgconn");
+            this.rabbitMQService = rabbitMQService;
+            this.redisService = redisService;
         }
 
         // ✅ GET: api/admin/users - Returns JSON list of users
@@ -289,9 +291,6 @@ namespace MyApp.API.Controllers
         [HttpPost("send")]
         public async Task<IActionResult> SendMessage([FromQuery] string queueName, [FromQuery] string Receiver, [FromBody] string message)
         {
-            System.Console.WriteLine(queueName);
-            System.Console.WriteLine(Receiver);
-            System.Console.WriteLine(message);
             if (string.IsNullOrEmpty(message))
             {
                 return BadRequest("Message cannot be null or empty.");
@@ -306,8 +305,7 @@ namespace MyApp.API.Controllers
             }
 
             // Apde ahiya redis ma message store karvaye chiye with the help of message key which will be unique for each message
-            string redisKey = $"message:{Receiver}:{Guid.NewGuid()}";
-            System.Console.WriteLine(redisKey);
+            string redisKey = $"message:{Receiver}:{Guid.NewGuid()}"; 
             redisService.Set(redisKey, message);
 
             // Ane aee unique key data base ma store karavye chiye 
@@ -327,8 +325,6 @@ namespace MyApp.API.Controllers
             return Ok("Message sent successfully, and saved in Redis with key : " + redisKey);
         }
 
-
-
         [HttpGet("receive")]
         public async Task<IActionResult> ReceiveMessage([FromQuery] string queueName, [FromQuery] string redisKey)
         {
@@ -343,7 +339,6 @@ namespace MyApp.API.Controllers
             // Return a structured response
             return Ok(new { Sender = sender, Message = message });
         }
-
 
 
     }
