@@ -7,6 +7,8 @@ namespace MyApp.Core.Models
 public class t_User1
 {
     [Key]
+     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+
     public int c_userId { get; set; }
 
     [Required(ErrorMessage = "Full name is required")]

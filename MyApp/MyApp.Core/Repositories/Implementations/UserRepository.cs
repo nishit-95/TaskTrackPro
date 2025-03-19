@@ -123,7 +123,7 @@ namespace MyApp.Core.Repositories.Implementations
                     string hashedPassword = BCrypt.Net.BCrypt.HashPassword(data.c_password);
                     
                     NpgsqlCommand com = new NpgsqlCommand(@"INSERT INTO t_user(c_userName, c_email, c_password, c_mobile, c_gender, c_address, c_status, c_image, c_role) 
-                        VALUES (@c_userName, @c_email, @c_password, @c_mobile, @c_gender, @c_address, @c_status, @c_image, @c_role)", _conn);
+                        VALUES (@c_userName, @c_email, @c_password, @c_mobile, @c_gender, @c_address, @c_status, @c_image, @c_role) RETURNING c_userId;", _conn);
                     
                     com.Parameters.AddWithValue("@c_userName", data.c_userName);
                     com.Parameters.AddWithValue("@c_email", data.c_email);
@@ -136,12 +136,23 @@ namespace MyApp.Core.Repositories.Implementations
                     com.Parameters.AddWithValue("@c_role", data.c_role);
                     
                     await _conn.OpenAsync();
-                    await com.ExecuteNonQueryAsync();
-                    await _conn.CloseAsync();
-                    return 1;
+                    object result = await com.ExecuteScalarAsync();
+        await _conn.CloseAsync();
+
+        if (result != null && int.TryParse(result.ToString(), out int userId))
+        {
+            return userId; // Return the new user's ID
+        }
+        else
+        {
+            return -1; // Error in retrieving the ID
+        }
+                
                 }
             }
         }
+            
+        
         catch (Exception e)
         {
             await _conn.CloseAsync();

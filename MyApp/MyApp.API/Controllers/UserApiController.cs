@@ -195,13 +195,16 @@ namespace MyApp.API.Controllers
                     user.c_image = null;
                 }
                 user.c_role = "User";
-                var status = await _userRepo.Register(user);
+                int userId = await _userRepo.Register(user); // Get the actual user ID
 
-                if (status == 1)
+                if (userId > 0) // User registered successfully
                 {
-                    return Ok(new { success = true, message = "User Registered" });
+                    string message = $"New user registered: {user.c_userName}";
+                    _rabbitMQService.PublishMessage(message, userId); // ✅ Now passing userId (int)
+
+                    return Ok(new { success = true, message = "User Registered", userId });
                 }
-                else if (status == 0)
+                else if (userId == 0)
                 {
                     return Ok(new { success = false, message = "User Already Exists" });
                 }
