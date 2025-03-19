@@ -299,7 +299,6 @@
         tabindex="0"
         src="./dashboard-iframe.html"
       ></iframe> *@
-    <p>this is dashboard section</p>
     <div id="taskList"></div>
   </div>
   <!-- ##end main content -->
@@ -350,8 +349,9 @@
   <script src="../../js/UserProfile.js"></script>
   <script>
 
+      var userid = localStorage.getItem("userID");
     $(document).ready(function () {
-
+      $("#taskList").data("kendoGrid").dataSource.read();
       setTimeout(function () {
         $("#load_screen").hide();
       }, 3000);
@@ -401,11 +401,13 @@
         template: kendo.template($("#thumnail_template").html()),
       });
     });
+    console.log(userid)
     $("#taskList").kendoGrid({
       dataSource: {
         transport: {
+          
             read: {
-                url: "http://localhost:5112/api/tasks/GetTaskByUserId/1",  // 🔹 Replace with your API endpoint
+                url: "http://localhost:5112/api/UserApi/GetTaskByUserId/" + userid,  // 🔹 Replace with your API endpoint
                 dataType: "json" // Expect JSON response
             }
         },
@@ -444,9 +446,9 @@
   });
   function UpdateStatus(taskid,userid)
   {
-    console.log(taskid);
+    
     $.ajax({
-      url: "http://localhost:5112/api/tasks/UpdateStatus/" + taskid + "/" + userid,
+      url: "http://localhost:5112/api/UserApi/UpdateStatus/" + taskid + "/" + userid,
       type: "GET",
       contentType:false,
       processData:false,

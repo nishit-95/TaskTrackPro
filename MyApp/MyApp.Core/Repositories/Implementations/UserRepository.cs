@@ -105,7 +105,7 @@ namespace MyApp.Core.Repositories.Implementations
                 (c_title,c_taskid,c_userid)
                 VALUES 
                 (@c_title,@c_taskid,@c_userid) ", _conn);
-                sendNotificationCmd.Parameters.AddWithValue("@c_title", taskTitle);
+                sendNotificationCmd.Parameters.AddWithValue("@c_title", taskTitle + "Task Completed");
                 sendNotificationCmd.Parameters.AddWithValue("@c_taskid", taskId);
                 sendNotificationCmd.Parameters.AddWithValue("@c_userid", userId);
                 int result = await sendNotificationCmd.ExecuteNonQueryAsync();

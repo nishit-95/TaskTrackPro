@@ -146,7 +146,7 @@ namespace MyApp.API.Controllers
             using var conn = new NpgsqlConnection(_connectionString);
             conn.Open();
 
-            string sql = "SELECT c_notificationId, c_title FROM t_notification WHERE c_isRead = false ORDER BY c_notificationId DESC";
+            string sql = "SELECT c_notificationId, c_title FROM t_notification WHERE c_isRead = false and c_taskId is Null ORDER BY c_notificationId DESC";
 
             using var cmd = new NpgsqlCommand(sql, conn);
             using var reader = cmd.ExecuteReader();
@@ -289,6 +289,9 @@ namespace MyApp.API.Controllers
         [HttpPost("send")]
         public async Task<IActionResult> SendMessage([FromQuery] string queueName, [FromQuery] string Receiver, [FromBody] string message)
         {
+            System.Console.WriteLine(queueName);
+            System.Console.WriteLine(Receiver);
+            System.Console.WriteLine(message);
             if (string.IsNullOrEmpty(message))
             {
                 return BadRequest("Message cannot be null or empty.");
@@ -304,6 +307,7 @@ namespace MyApp.API.Controllers
 
             // Apde ahiya redis ma message store karvaye chiye with the help of message key which will be unique for each message
             string redisKey = $"message:{Receiver}:{Guid.NewGuid()}";
+            System.Console.WriteLine(redisKey);
             redisService.Set(redisKey, message);
 
             // Ane aee unique key data base ma store karavye chiye 
