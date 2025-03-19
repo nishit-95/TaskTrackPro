@@ -70,28 +70,63 @@ namespace MyApp.Core.Services
             return Task.CompletedTask;
         }
 
-        private void SaveNotificationToDatabase(string title, int userId)
+        // private void SaveNotificationToDatabase(string title, int userId)
+        // {
+        //     try
+        //     {
+        //         using var conn = new NpgsqlConnection(_connectionString);
+        //         conn.Open();
+
+        //         string sql = "INSERT INTO t_notification (c_title, c_userId) VALUES (@title, @userId)";
+
+        //         using var cmd = new NpgsqlCommand(sql, conn);
+        //         cmd.Parameters.AddWithValue("@title", title);
+        //         cmd.Parameters.AddWithValue("@userId", userId);
+
+        //         cmd.ExecuteNonQuery();
+
+        //         Console.WriteLine($"[Database] Notification saved: Title={title}, UserId={userId}");
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Console.WriteLine($"[Database Error]: {ex.Message}");
+        //     }
+        // }
+
+private void SaveNotificationToDatabase(string title, int userId)
+{
+    try
+    {
+        using var conn = new NpgsqlConnection(_connectionString);
+        conn.Open();
+
+        Console.WriteLine($"[DEBUG] Connecting to database to insert notification: Title={title}, UserId={userId}");
+
+        string sql = "INSERT INTO t_notification (c_title, c_userId) VALUES (@title, @userId)";
+
+        using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@title", title);
+        cmd.Parameters.AddWithValue("@userId", userId);
+
+        int rowsAffected = cmd.ExecuteNonQuery();
+
+        if (rowsAffected > 0)
         {
-            try
-            {
-                using var conn = new NpgsqlConnection(_connectionString);
-                conn.Open();
-
-                string sql = "INSERT INTO t_notification (c_title, c_userId) VALUES (@title, @userId)";
-
-                using var cmd = new NpgsqlCommand(sql, conn);
-                cmd.Parameters.AddWithValue("@title", title);
-                cmd.Parameters.AddWithValue("@userId", userId);
-
-                cmd.ExecuteNonQuery();
-
-                Console.WriteLine($"[Database] Notification saved: Title={title}, UserId={userId}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[Database Error]: {ex.Message}");
-            }
+            Console.WriteLine($"[DEBUG] Notification successfully inserted into database.");
         }
+        else
+        {
+            Console.WriteLine($"[ERROR] No rows affected while inserting notification.");
+        }
+
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Database Error]: {ex.Message}");
+    }
+}
+
+
 
         public class NotificationModel
         {

@@ -139,38 +139,43 @@ namespace MyApp.Core.Repositories.Implementations
                 await _conn.OpenAsync();
                 using (NpgsqlDataReader datadr = await comcheck.ExecuteReaderAsync())
                 {
-                    if (datadr.HasRows)
+                    await _conn.CloseAsync();
+
+                    // Hash the password before storing
+                    string hashedPassword = BCrypt.Net.BCrypt.HashPassword(data.c_password);
+
+                    NpgsqlCommand com = new NpgsqlCommand(@"INSERT INTO t_user(c_userName, c_email, c_password, c_mobile, c_gender, c_address, c_status, c_image, c_role) 
+                        VALUES (@c_userName, @c_email, @c_password, @c_mobile, @c_gender, @c_address, @c_status, @c_image, @c_role) RETURNING c_userId;", _conn);
+
+                    com.Parameters.AddWithValue("@c_userName", data.c_userName);
+                    com.Parameters.AddWithValue("@c_email", data.c_email);
+                    com.Parameters.AddWithValue("@c_password", hashedPassword); // Store hashed password
+                    com.Parameters.AddWithValue("@c_mobile", data.c_mobile);
+                    com.Parameters.AddWithValue("@c_gender", data.c_gender);
+                    com.Parameters.AddWithValue("@c_address", data.c_address);
+                    com.Parameters.AddWithValue("@c_status", data.c_status);
+                    com.Parameters.AddWithValue("@c_image", data.c_image);
+                    com.Parameters.AddWithValue("@c_role", data.c_role);
+
+                    await _conn.OpenAsync();
+                    object result = await com.ExecuteScalarAsync();
+                    await _conn.CloseAsync();
+
+                    if (result != null && int.TryParse(result.ToString(), out int userId))
                     {
-                        await _conn.CloseAsync();
-                        return 0;
+                        return userId; // Return the new user's ID
                     }
                     else
                     {
-                        await _conn.CloseAsync();
-
-                        // Hash the password before storing
-                        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(data.c_password);
-
-                        NpgsqlCommand com = new NpgsqlCommand(@"INSERT INTO t_user(c_userName, c_email, c_password, c_mobile, c_gender, c_address, c_status, c_image, c_role) 
-                        VALUES (@c_userName, @c_email, @c_password, @c_mobile, @c_gender, @c_address, @c_status, @c_image, @c_role)", _conn);
-
-                        com.Parameters.AddWithValue("@c_userName", data.c_userName);
-                        com.Parameters.AddWithValue("@c_email", data.c_email);
-                        com.Parameters.AddWithValue("@c_password", hashedPassword); // Store hashed password
-                        com.Parameters.AddWithValue("@c_mobile", data.c_mobile);
-                        com.Parameters.AddWithValue("@c_gender", data.c_gender);
-                        com.Parameters.AddWithValue("@c_address", data.c_address);
-                        com.Parameters.AddWithValue("@c_status", data.c_status);
-                        com.Parameters.AddWithValue("@c_image", data.c_image);
-                        com.Parameters.AddWithValue("@c_role", data.c_role);
-
-                        await _conn.OpenAsync();
-                        await com.ExecuteNonQueryAsync();
-                        await _conn.CloseAsync();
-                        return 1;
+                        return -1; // Error in retrieving the ID
                     }
+
+
                 }
+
             }
+
+
             catch (Exception e)
             {
                 await _conn.CloseAsync();
@@ -178,6 +183,66 @@ namespace MyApp.Core.Repositories.Implementations
                 return -1;
             }
         }
+
+        // public async Task<t_User1> Login(vm_Login user)
+        // {
+        //     t_User1 UserData = new t_User1();
+        //     try
+        //     {
+        //         // First retrieve the user by email only (not checking password yet)
+        //         var qry = "SELECT * FROM t_user WHERE c_email = @c_email";
+        //         using (NpgsqlCommand cmd = new NpgsqlCommand(qry, _conn))
+        //         {
+        //             cmd.Parameters.AddWithValue("@c_email", user.c_email);
+        //             await _conn.OpenAsync();
+        //             var reader = await cmd.ExecuteReaderAsync();
+        //             if (reader.Read())
+        //             {
+        //                 // Get the stored hashed password
+        //                 string storedHash = reader.GetString(reader.GetOrdinal("c_password"));
+        //                 string userStatus = reader.GetString(reader.GetOrdinal("c_status"));
+
+        //                 // Only proceed if user is active
+        //                 if (userStatus != "Approved")
+        //                     if (datadr.HasRows)
+        //                     {
+        //                         await _conn.CloseAsync();
+        //                         return 0;
+        //                     }
+        //                     else
+        //                     {
+        //                         await _conn.CloseAsync();
+
+        //                         // Hash the password before storing
+        //                         string hashedPassword = BCrypt.Net.BCrypt.HashPassword(data.c_password);
+
+        //                         NpgsqlCommand com = new NpgsqlCommand(@"INSERT INTO t_user(c_userName, c_email, c_password, c_mobile, c_gender, c_address, c_status, c_image, c_role) 
+        //                 VALUES (@c_userName, @c_email, @c_password, @c_mobile, @c_gender, @c_address, @c_status, @c_image, @c_role)", _conn);
+
+        //                         com.Parameters.AddWithValue("@c_userName", data.c_userName);
+        //                         com.Parameters.AddWithValue("@c_email", data.c_email);
+        //                         com.Parameters.AddWithValue("@c_password", hashedPassword); // Store hashed password
+        //                         com.Parameters.AddWithValue("@c_mobile", data.c_mobile);
+        //                         com.Parameters.AddWithValue("@c_gender", data.c_gender);
+        //                         com.Parameters.AddWithValue("@c_address", data.c_address);
+        //                         com.Parameters.AddWithValue("@c_status", data.c_status);
+        //                         com.Parameters.AddWithValue("@c_image", data.c_image);
+        //                         com.Parameters.AddWithValue("@c_role", data.c_role);
+
+        //                         await _conn.OpenAsync();
+        //                         await com.ExecuteNonQueryAsync();
+        //                         await _conn.CloseAsync();
+        //                         return 1;
+        //                     }
+        //             }
+        //         }
+        //     catch (Exception e)
+        //     {
+        //         await _conn.CloseAsync();
+        //         Console.WriteLine("Register Failed, Error :- " + e.Message);
+        //         return -1;
+        //     }
+        // }
 
         public async Task<t_User1> Login(vm_Login user)
         {

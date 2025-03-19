@@ -65,12 +65,12 @@
 
 <script>
     $(document).ready(function () {
-        $.get("http://localhost:5286/api/AdminApi/GetDoc", function (data) {
+        $.get("http://localhost:5112/api/AdminApi/GetDoc", function (data) {
             let taskContainer = $("#taskContainer");
             taskContainer.empty();
 
             data.forEach(task => {
-                let fileUrl = `http://localhost:5144/${task.c_document}`;
+                let fileUrl = `http://localhost:5047/${task.c_document}`;
                 let fileExtension = task.c_document.split('.').pop().toLowerCase();
 
                 let viewButton = '';
@@ -108,7 +108,7 @@
                 console.log("Updating Task ID:", taskId, "New Status:", newStatus);
                 
                 $.ajax({
-                    url: "http://localhost:5286/api/AdminApi/UpdateTaskStatus",
+                    url: "http://localhost:5112/api/AdminApi/UpdateTaskStatus",
                     type: "POST",
                     contentType: "application/json",
                     dataType: "json",
