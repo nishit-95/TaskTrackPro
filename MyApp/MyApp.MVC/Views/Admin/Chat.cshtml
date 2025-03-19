@@ -173,6 +173,7 @@
                     success: function (response) {
 
                         console.log("sender : " + response.sender);
+                        console.log("Message : "+response.message);
                         if (response.sender !== senderUsername) {
                             // Display the message on the left (sender's side)
                             $('#chatbox').append(`<div class="message sender">You: ${response.message}</div>`);

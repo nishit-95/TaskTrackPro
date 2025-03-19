@@ -85,8 +85,10 @@
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        const senderId = 0;
-        const senderUsername = "John";
+        var userid = localStorage.getItem("userID");
+        var userName = localStorage.getItem("userName");
+        const senderId = userid;
+        const senderUsername = userName;
         let receiverName = '';
         $(document).ready(function () {
 
