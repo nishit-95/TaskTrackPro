@@ -148,7 +148,7 @@ namespace MyApp.API.Controllers
             using var conn = new NpgsqlConnection(_connectionString);
             conn.Open();
 
-            string sql = "SELECT c_notificationId, c_title FROM t_notification WHERE c_isRead = false and c_taskId is Null ORDER BY c_notificationId DESC";
+            string sql = "SELECT c_notificationId, c_title FROM t_notification WHERE c_isRead = FALSE AND c_taskId IS NULL ORDER BY c_notificationId DESC";
 
             using var cmd = new NpgsqlCommand(sql, conn);
             using var reader = cmd.ExecuteReader();
