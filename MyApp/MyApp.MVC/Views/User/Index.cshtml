@@ -58,18 +58,14 @@
       </div>
       <div class="nav-right">
         <ul class="user-menu">
-          <li class="support-mail-wrapper">
-            <a href="javascript:void(0)" class="help">
-              <span class="icon"><i class="icon-help"></i></span>
-            </a>
-          </li>
-          <li class="notification-item item">
+          
+          @* <li class="notification-item item">
             <a href="javascript:void(0)">
               <span class="icon"><i class="icon-notification"></i></span>
               <!-- here we need to give notification -->
               <span class="counts">12</span>
             </a>
-          </li>
+          </li> *@
           <li class="separator"></li>
           <li class="userprofile-item userprofile dropdown">
             <a href="javascript:void(0)">
@@ -86,8 +82,8 @@
   <!--navigation pages-->
   <nav class="mt-navbar-pages">
     <ul class="list-inline pages-menu">
-      <li class="active">
-        <a href="dashboard.html" title="Dashboard">Dashboard</a>
+      <li>
+        <a asp-controller="User" asp-action="Index" title="Dashboard">Dashboard</a>
       </li>
       <li><a asp-controller="User" asp-action="Chat" title="Chat">Chat</a></li>
     </ul>
@@ -285,13 +281,13 @@
     </div>
   </div>
 
-  <div class="notification-box success" id="user-update-notification" style="display: block;">
+  @* <div class="notification-box success" id="user-update-notification" style="display: block;">
     <div class="notification-alert success user-update">
       <div class="pull-left"><i class="icon-check" aria-hidden="true"></i></div>
       <div class="pull-right" role="alert" aria-label="Success">
       </div>
     </div>
-  </div>
+  </div> *@
 
   <!-- end user profile -->
   <!-- main content -->
@@ -303,7 +299,6 @@
         tabindex="0"
         src="./dashboard-iframe.html"
       ></iframe> *@
-    <p>this is dashboard section</p>
     <div id="taskList"></div>
   </div>
   <!-- ##end main content -->
@@ -354,8 +349,9 @@
   <script src="../../js/UserProfile.js"></script>
   <script>
 
+      var userid = localStorage.getItem("userID");
     $(document).ready(function () {
-
+      $("#taskList").data("kendoGrid").dataSource.read();
       setTimeout(function () {
         $("#load_screen").hide();
       }, 3000);
@@ -405,13 +401,15 @@
         template: kendo.template($("#thumnail_template").html()),
       });
     });
+    console.log(userid)
     $("#taskList").kendoGrid({
       dataSource: {
         transport: {
-          read: {
-            url: "http://localhost:5112/api/tasks/GetTaskByUserId/1",  // 🔹 Replace with your API endpoint
-            dataType: "json" // Expect JSON response
-          }
+          
+            read: {
+                url: "http://localhost:5112/api/UserApi/GetTaskByUserId/" + userid,  // 🔹 Replace with your API endpoint
+                dataType: "json" // Expect JSON response
+            }
         },
         schema: {
           model: {
@@ -440,27 +438,29 @@
         { field: "c_Enddate", title: "End Date", width: "200px", format: "{0:MM/dd/yyyy}" },
         { field: "c_Status", title: "Status", width: "200px", template: "#= c_Status == 'Completed' ? '✅ Done' : '⏳ Pending' #" },
         {
-          title: "Mark As Done",
-          template: `<button class='k-button k-button-solid-error' onclick='UpdateStatus(#=c_Taskid#,#=c_Userid#)'>✔ Complete</button>`,
-          width: 150
+            title: "Mark As Done",
+            template: `<button class='k-button k-button-solid-error' onclick='UpdateStatus(#=c_Taskid#,#=c_Userid#)'>✔ Complete</button>`,
+            width: 150
         }
-      ]
+    ]
+  });
+  function UpdateStatus(taskid,userid)
+  {
+    
+    $.ajax({
+      url: "http://localhost:5112/api/UserApi/UpdateStatus/" + taskid + "/" + userid,
+      type: "GET",
+      contentType:false,
+      processData:false,
+      success:function(response)
+      {
+        window.location.reload();
+      },
+      error: function (xhr, status, error) {
+        console.log("there was some error while Updating status");
+      }
     });
-    function UpdateStatus(taskid, userid) {
-      console.log(taskid);
-      $.ajax({
-        url: "http://localhost:5112/api/tasks/UpdateStatus/" + taskid + "/" + userid,
-        type: "GET",
-        contentType: false,
-        processData: false,
-        success: function (response) {
-          window.location.reload();
-        },
-        error: function (xhr, status, error) {
-          console.log("there was some error while Updating status");
-        }
-      });
-    };
+  };
   </script>
 </body>
 

@@ -63,16 +63,19 @@
         font-weight: 500;
         color: #495057;
     }
-    
+
     .form-control:focus {
         border-color: #80bdff;
-        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
     }
-    
+
     .k-dropdown {
         width: 100% !important;
     }
 </style>
+<input type="text" id="searchBox" placeholder="Search..." />
+<button id="searchButton">Search</button>
+
 <div id="taskGrid"></div>
 
 <style>
@@ -80,12 +83,12 @@
         font-weight: 500;
         color: #495057;
     }
-    
+
     .form-control:focus {
         border-color: #80bdff;
-        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
     }
-    
+
     .k-dropdown {
         width: 100% !important;
     }
@@ -129,7 +132,48 @@
 
 
 <script>
+    let isHighlighted = false;
+
+    $("#searchButton").click(function () {
+        if (isHighlighted) {
+            resetGrid();
+            isHighlighted = false;
+        } else {
+            highlightSearch();
+            isHighlighted = true;
+        }
+    });
+
+    function highlightSearch() {
+        var query = $("#searchBox").val().trim();
+
+        if (!query) return;
+
+        var grid = $("#taskGrid").data("kendoGrid");
+        var data = grid.dataSource.data();
+
+        data.forEach(function (item) {
+            item.set("title", highlightText(item.title, query));
+            item.set("description", highlightText(item.description, query));
+        });
+
+        grid.refresh();
+    }
+
+    function resetGrid() {
+        $("#searchBox").val(""); // Clear search box
+        var grid = $("#taskGrid").data("kendoGrid");
+        grid.dataSource.read(); // Reload original data
+        grid.refresh();
+    }
+
+    function highlightText(text, query) {
+        if (!text || !query) return text;
+        var regex = new RegExp("(" + query + ")", "gi");
+        return text.replace(regex, "<mark>$1</mark>");
+    }
     $(document).ready(function () {
+
         // Load Users into DropDownList
         $("#userDropdown").kendoDropDownList({
             optionLabel: "Select User",
@@ -213,7 +257,6 @@
                             startDate: { type: "date" },
                             endDate: { type: "date" },
                             status: { type: "string" },
-                            
                         }
                     }
                 },
@@ -225,13 +268,12 @@
             columns: [
                 { field: "taskId", title: "Task ID", width: "50px", hidden: true },
                 { field: "userName", title: "Assigned User", width: "150px", editable: false },
-                { field: "title", title: "Task Title", width: "150px" },
-                { field: "description", title: "Description", width: "200px" },
+                { field: "title", title: "Task Title", width: "150px", encoded: false }, // 🔹 Encoding off for HTML rendering
+                { field: "description", title: "Description", width: "200px", encoded: false }, // 🔹 Encoding off for HTML rendering
                 { field: "estimatedDays", title: "Days", width: "80px" },
                 { field: "startDate", title: "Start Date", format: "{0:yyyy-MM-dd}", width: "100px" },
                 { field: "endDate", title: "End Date", format: "{0:yyyy-MM-dd}", width: "100px" },
                 { field: "status", title: "Status", width: "120px" },
-               
                 { command: ["edit", "destroy"], title: "&nbsp;", width: "200px" }
             ]
         });
@@ -256,7 +298,7 @@
 
     function updateTask(options) {
         var data = options.data;
-        
+
         // Create the updated task object
         var updatedTask = {
             taskId: data.taskId,
@@ -271,7 +313,7 @@
         // Send update request
         $.ajax({
             url: "http://localhost:5112/api/AdminApi/UpdateTask",
-            type: "PUT", 
+            type: "PUT",
             contentType: "application/json",
             data: JSON.stringify(updatedTask),
             success: function (result) {
@@ -289,7 +331,7 @@
 
     function deleteTask(options) {
         var taskId = options.data.taskId;
-        
+
         if (!taskId) {
             console.error("taskId is undefined");
             return;
@@ -308,5 +350,5 @@
                 options.error(xhr);
             }
         });
-    }
+    }
 </script>

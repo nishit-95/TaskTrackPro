@@ -9,33 +9,43 @@ namespace MyApp.Core.Services
 {
     public class ElasticSearchService
     {
-        private readonly IElasticClient _elasticClient;
+        private readonly ElasticClient _client;
+    private const string IndexName = "tasks";
 
-        public ElasticSearchService(IElasticClient elasticClient)
-        {
-            _elasticClient = elasticClient;
-        }
+    public ElasticSearchService()
+    {
+        var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
+            .DefaultIndex(IndexName);
+        _client = new ElasticClient(settings);
+    }
 
-        public async Task IndexTask(t_task task)
-        {
-            var response = await _elasticClient.IndexDocumentAsync(task);
-        }
-
-        public async Task<List<t_task>> SearchTasks(string query, string status = null)
-        {
-            var searchResponse = await _elasticClient.SearchAsync<t_task>(s => s
-                .Query(q => q
-                    .Bool(b => b
-                        .Must(
-                            q.Match(m => m.Field(f => f.c_title).Query(query)),  // Search by title
-                            q.Match(m => m.Field(f => f.c_description).Query(query)) // Search by description
-                        )
-                        .Filter(f => status != null ? f.Term(t => t.Field(f => f.c_status).Value(status)) : null) // Filter by status
-                    )
+    public async Task<List<TaskModel>> SearchTasks(string query)
+    {
+        var response = await _client.SearchAsync<TaskModel>(s => s
+            .Index(IndexName)
+            .Query(q => q
+                .Match(m => m
+                    .Field(f => f.Title)
+                    .Query(query)
                 )
-            );
+            )
+            .Highlight(h => h
+                .Fields(f => f
+                    .Field(p => p.Title)
+                )
+                .PreTags("<mark>")
+                .PostTags("</mark>")
+            )
+        );
 
-            return searchResponse.Documents.ToList();
+        var results = new List<TaskModel>();
+        foreach (var hit in response.Hits)
+        {
+            var task = hit.Source;
+            task.HighlightedTitle = hit.Highlight.ContainsKey("title") ? string.Join(" ", hit.Highlight["title"]) : task.Title;
+            results.Add(task);
         }
+        return results;
+    }
     }
 }

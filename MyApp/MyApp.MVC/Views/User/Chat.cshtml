@@ -35,7 +35,7 @@
 </style>
 
 <div class="container mt-5">
-    <h1 class="text-center mb-4">Welcome : username</h1>
+    <h1 class="text-center mb-4">Welcome: <span id="username"></span></h1>
     <div class="row">
 
         <div class="col-md-6" style="width: 100vw; margin-bottom: 1px;">
@@ -74,6 +74,15 @@
 </div>
 
 @section Scripts {
+    <script>
+        // Local storage se username get karo
+        var username = localStorage.getItem("userName"); // Ensure "userName" key is correct
+        if (username) {
+            document.getElementById("username").textContent = username;
+        } else {
+            document.getElementById("username").textContent = "Guest";
+        }
+    </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         const senderId = 0;

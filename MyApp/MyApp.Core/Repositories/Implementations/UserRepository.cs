@@ -15,10 +15,13 @@ namespace MyApp.Core.Repositories.Implementations
     {
         private readonly NpgsqlConnection _conn;
 
-        public UserRepository(NpgsqlConnection conn)
+        private readonly IEmailService _emailService;
+        public UserRepository(NpgsqlConnection connection, IEmailService emailService)
         {
-            _conn = conn;
+            _conn = connection;
+            _emailService = emailService;
         }
+
 
         public async Task<List<t_task_user>> GetTaskByUserId(int userId)
         {
@@ -92,39 +95,58 @@ namespace MyApp.Core.Repositories.Implementations
 
         }
 
-    private readonly IEmailService _emailService;
-    public UserRepository(NpgsqlConnection connection, IEmailService emailService)
-    {
-        _conn = connection;
-        _emailService = emailService;
-    }
-    
-    public async Task<int> Register(t_User1 data)
-    {
-        int status = 0;
-        try
+        public async Task<int> SendNotification(string taskTitle, int userId, int taskId)
         {
             await _conn.CloseAsync();
-            NpgsqlCommand comcheck = new NpgsqlCommand(@"SELECT * FROM t_user WHERE c_email = @c_email;", _conn);
-            comcheck.Parameters.AddWithValue("@c_email", data.c_email);
             await _conn.OpenAsync();
-            using (NpgsqlDataReader datadr = await comcheck.ExecuteReaderAsync())
+            try
             {
-                if (datadr.HasRows)
+                NpgsqlCommand sendNotificationCmd = new NpgsqlCommand(@"INSERT INTO t_notification 
+                (c_title,c_taskid,c_userid)
+                VALUES 
+                (@c_title,@c_taskid,@c_userid) ", _conn);
+                sendNotificationCmd.Parameters.AddWithValue("@c_title", taskTitle + "Task Completed");
+                sendNotificationCmd.Parameters.AddWithValue("@c_taskid", taskId);
+                sendNotificationCmd.Parameters.AddWithValue("@c_userid", userId);
+                int result = await sendNotificationCmd.ExecuteNonQueryAsync();
+                if (result == 0)
                 {
-                    await _conn.CloseAsync();
+                    System.Console.WriteLine("ERROR : From userrepo SendNotification method, the notification was not sent : ");
                     return 0;
                 }
-                else
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine("ERROR : From userrepo SendNotification method, There was some error while Sending the notification : " + ex.Message);
+                return 0;
+            }
+            finally
+            {
+                await _conn.CloseAsync();
+            }
+        }
+
+
+        public async Task<int> Register(t_User1 data)
+        {
+            int status = 0;
+            try
+            {
+                await _conn.CloseAsync();
+                NpgsqlCommand comcheck = new NpgsqlCommand(@"SELECT * FROM t_user WHERE c_email = @c_email;", _conn);
+                comcheck.Parameters.AddWithValue("@c_email", data.c_email);
+                await _conn.OpenAsync();
+                using (NpgsqlDataReader datadr = await comcheck.ExecuteReaderAsync())
                 {
                     await _conn.CloseAsync();
-                    
+
                     // Hash the password before storing
                     string hashedPassword = BCrypt.Net.BCrypt.HashPassword(data.c_password);
-                    
+
                     NpgsqlCommand com = new NpgsqlCommand(@"INSERT INTO t_user(c_userName, c_email, c_password, c_mobile, c_gender, c_address, c_status, c_image, c_role) 
                         VALUES (@c_userName, @c_email, @c_password, @c_mobile, @c_gender, @c_address, @c_status, @c_image, @c_role) RETURNING c_userId;", _conn);
-                    
+
                     com.Parameters.AddWithValue("@c_userName", data.c_userName);
                     com.Parameters.AddWithValue("@c_email", data.c_email);
                     com.Parameters.AddWithValue("@c_password", hashedPassword); // Store hashed password
@@ -134,159 +156,220 @@ namespace MyApp.Core.Repositories.Implementations
                     com.Parameters.AddWithValue("@c_status", data.c_status);
                     com.Parameters.AddWithValue("@c_image", data.c_image);
                     com.Parameters.AddWithValue("@c_role", data.c_role);
-                    
+
                     await _conn.OpenAsync();
                     object result = await com.ExecuteScalarAsync();
-        await _conn.CloseAsync();
+                    await _conn.CloseAsync();
 
-        if (result != null && int.TryParse(result.ToString(), out int userId))
-        {
-            return userId; // Return the new user's ID
-        }
-        else
-        {
-            return -1; // Error in retrieving the ID
-        }
-                
+                    if (result != null && int.TryParse(result.ToString(), out int userId))
+                    {
+                        return userId; // Return the new user's ID
+                    }
+                    else
+                    {
+                        return -1; // Error in retrieving the ID
+                    }
+
+
                 }
+
+            }
+
+
+            catch (Exception e)
+            {
+                await _conn.CloseAsync();
+                Console.WriteLine("Register Failed, Error :- " + e.Message);
+                return -1;
             }
         }
-            
-        
-        catch (Exception e)
-        {
-            await _conn.CloseAsync();
-            Console.WriteLine("Register Failed, Error :- " + e.Message);
-            return -1;
-        }
-    }
 
-    public async Task<t_User1> Login(vm_Login user)
-    {
-        t_User1 UserData = new t_User1();
-        try
+        // public async Task<t_User1> Login(vm_Login user)
+        // {
+        //     t_User1 UserData = new t_User1();
+        //     try
+        //     {
+        //         // First retrieve the user by email only (not checking password yet)
+        //         var qry = "SELECT * FROM t_user WHERE c_email = @c_email";
+        //         using (NpgsqlCommand cmd = new NpgsqlCommand(qry, _conn))
+        //         {
+        //             cmd.Parameters.AddWithValue("@c_email", user.c_email);
+        //             await _conn.OpenAsync();
+        //             var reader = await cmd.ExecuteReaderAsync();
+        //             if (reader.Read())
+        //             {
+        //                 // Get the stored hashed password
+        //                 string storedHash = reader.GetString(reader.GetOrdinal("c_password"));
+        //                 string userStatus = reader.GetString(reader.GetOrdinal("c_status"));
+
+        //                 // Only proceed if user is active
+        //                 if (userStatus != "Approved")
+        //                     if (datadr.HasRows)
+        //                     {
+        //                         await _conn.CloseAsync();
+        //                         return 0;
+        //                     }
+        //                     else
+        //                     {
+        //                         await _conn.CloseAsync();
+
+        //                         // Hash the password before storing
+        //                         string hashedPassword = BCrypt.Net.BCrypt.HashPassword(data.c_password);
+
+        //                         NpgsqlCommand com = new NpgsqlCommand(@"INSERT INTO t_user(c_userName, c_email, c_password, c_mobile, c_gender, c_address, c_status, c_image, c_role) 
+        //                 VALUES (@c_userName, @c_email, @c_password, @c_mobile, @c_gender, @c_address, @c_status, @c_image, @c_role)", _conn);
+
+        //                         com.Parameters.AddWithValue("@c_userName", data.c_userName);
+        //                         com.Parameters.AddWithValue("@c_email", data.c_email);
+        //                         com.Parameters.AddWithValue("@c_password", hashedPassword); // Store hashed password
+        //                         com.Parameters.AddWithValue("@c_mobile", data.c_mobile);
+        //                         com.Parameters.AddWithValue("@c_gender", data.c_gender);
+        //                         com.Parameters.AddWithValue("@c_address", data.c_address);
+        //                         com.Parameters.AddWithValue("@c_status", data.c_status);
+        //                         com.Parameters.AddWithValue("@c_image", data.c_image);
+        //                         com.Parameters.AddWithValue("@c_role", data.c_role);
+
+        //                         await _conn.OpenAsync();
+        //                         await com.ExecuteNonQueryAsync();
+        //                         await _conn.CloseAsync();
+        //                         return 1;
+        //                     }
+        //             }
+        //         }
+        //     catch (Exception e)
+        //     {
+        //         await _conn.CloseAsync();
+        //         Console.WriteLine("Register Failed, Error :- " + e.Message);
+        //         return -1;
+        //     }
+        // }
+
+        public async Task<t_User1> Login(vm_Login user)
         {
-            // First retrieve the user by email only (not checking password yet)
-            var qry = "SELECT * FROM t_user WHERE c_email = @c_email";
-            using (NpgsqlCommand cmd = new NpgsqlCommand(qry, _conn))
+            t_User1 UserData = new t_User1();
+            try
             {
-                cmd.Parameters.AddWithValue("@c_email", user.c_email);
-                await _conn.OpenAsync();
-                var reader = await cmd.ExecuteReaderAsync();
-                if (reader.Read())
+                // First retrieve the user by email only (not checking password yet)
+                var qry = "SELECT * FROM t_user WHERE c_email = @c_email";
+                using (NpgsqlCommand cmd = new NpgsqlCommand(qry, _conn))
                 {
-                    // Get the stored hashed password
-                    string storedHash = reader.GetString(reader.GetOrdinal("c_password"));
-                    string userStatus = reader.GetString(reader.GetOrdinal("c_status"));
-                    
-                    // Only proceed if user is active
-                    if (userStatus != "Approved")
+                    cmd.Parameters.AddWithValue("@c_email", user.c_email);
+                    await _conn.OpenAsync();
+                    var reader = await cmd.ExecuteReaderAsync();
+                    if (reader.Read())
                     {
-                        // Save the status for later checking
+                        // Get the stored hashed password
+                        string storedHash = reader.GetString(reader.GetOrdinal("c_password"));
+                        string userStatus = reader.GetString(reader.GetOrdinal("c_status"));
+
+                        // Only proceed if user is active
+                        if (userStatus != "Approved")
+                        {
+                            // Save the status for later checking
+                            UserData.c_status = userStatus;
+                            return UserData;
+                        }
+
+                        // Verify the password outside of the reader
+                        bool passwordValid = false;
+
+                        // Load all user data
+                        UserData.c_userId = reader.GetInt32(reader.GetOrdinal("c_userId"));
+                        UserData.c_userName = reader.GetString(reader.GetOrdinal("c_userName"));
+                        UserData.c_email = reader.GetString(reader.GetOrdinal("c_email"));
+                        UserData.c_password = storedHash; // Don't expose the actual hash
+                        UserData.c_mobile = reader.GetString(reader.GetOrdinal("c_mobile"));
+                        UserData.c_gender = reader.GetString(reader.GetOrdinal("c_gender"));
+                        UserData.c_address = reader.IsDBNull(reader.GetOrdinal("c_address")) ? null : reader.GetString(reader.GetOrdinal("c_address"));
                         UserData.c_status = userStatus;
-                        return UserData;
-                    }
-                    
-                    // Verify the password outside of the reader
-                    bool passwordValid = false;
-                    
-                    // Load all user data
-                    UserData.c_userId = reader.GetInt32(reader.GetOrdinal("c_userId"));
-                    UserData.c_userName = reader.GetString(reader.GetOrdinal("c_userName"));
-                    UserData.c_email = reader.GetString(reader.GetOrdinal("c_email"));
-                    UserData.c_password = storedHash; // Don't expose the actual hash
-                    UserData.c_mobile = reader.GetString(reader.GetOrdinal("c_mobile"));
-                    UserData.c_gender = reader.GetString(reader.GetOrdinal("c_gender"));
-                    UserData.c_address = reader.IsDBNull(reader.GetOrdinal("c_address")) ? null : reader.GetString(reader.GetOrdinal("c_address"));
-                    UserData.c_status = userStatus;
-                    UserData.c_image = reader.IsDBNull(reader.GetOrdinal("c_image")) ? null : reader.GetString(reader.GetOrdinal("c_image"));
-                    UserData.c_role = reader.GetString(reader.GetOrdinal("c_role"));
-                    
-                    await reader.CloseAsync();
-                    
-                    // Now verify the password
-                    passwordValid = BCrypt.Net.BCrypt.Verify(user.c_password, storedHash);
-                    
-                    // If password is not valid, return empty user (with userId = 0)
-                    if (!passwordValid)
-                    {
-                        UserData = new t_User1();
+                        UserData.c_image = reader.IsDBNull(reader.GetOrdinal("c_image")) ? null : reader.GetString(reader.GetOrdinal("c_image"));
+                        UserData.c_role = reader.GetString(reader.GetOrdinal("c_role"));
+
+                        await reader.CloseAsync();
+
+                        // Now verify the password
+                        passwordValid = BCrypt.Net.BCrypt.Verify(user.c_password, storedHash);
+
+                        // If password is not valid, return empty user (with userId = 0)
+                        if (!passwordValid)
+                        {
+                            UserData = new t_User1();
+                        }
                     }
                 }
             }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine("Login Error: " + e.Message);
-        }
-        finally
-        {
-            await _conn.CloseAsync();
-        }
-        return UserData;
-    }
-
-
-    public async Task<t_User1> GetUserByEmail(string email)
-    {
-        t_User1 UserData = null;
-        var qry = "SELECT * FROM t_user WHERE c_email = @c_email";
-        try
-        {
-            using (NpgsqlCommand cmd = new NpgsqlCommand(qry, _conn))
+            catch (Exception e)
             {
-                cmd.Parameters.AddWithValue("@c_email", email);
-                await _conn.OpenAsync();
-                var reader = await cmd.ExecuteReaderAsync();
-                if (reader.Read())
+                Console.WriteLine("Login Error: " + e.Message);
+            }
+            finally
+            {
+                await _conn.CloseAsync();
+            }
+            return UserData;
+        }
+
+
+        public async Task<t_User1> GetUserByEmail(string email)
+        {
+            t_User1 UserData = null;
+            var qry = "SELECT * FROM t_user WHERE c_email = @c_email";
+            try
+            {
+                using (NpgsqlCommand cmd = new NpgsqlCommand(qry, _conn))
                 {
-                    UserData = new t_User1
+                    cmd.Parameters.AddWithValue("@c_email", email);
+                    await _conn.OpenAsync();
+                    var reader = await cmd.ExecuteReaderAsync();
+                    if (reader.Read())
                     {
-                        c_userId = reader.GetInt32(reader.GetOrdinal("c_userId")),
-                        c_userName = reader.GetString(reader.GetOrdinal("c_userName")),
-                        c_email = reader.GetString(reader.GetOrdinal("c_email")),
-                        c_password = "[PROTECTED]", // Don't expose hash in responses
-                        c_mobile = reader.GetString(reader.GetOrdinal("c_mobile")),
-                        c_gender = reader.GetString(reader.GetOrdinal("c_gender")),
-                        c_address = reader.IsDBNull(reader.GetOrdinal("c_address")) ? null : reader.GetString(reader.GetOrdinal("c_address")),
-                        c_status = reader.GetString(reader.GetOrdinal("c_status")),
-                        c_image = reader.IsDBNull(reader.GetOrdinal("c_image")) ? null : reader.GetString(reader.GetOrdinal("c_image")),
-                        c_role = reader.GetString(reader.GetOrdinal("c_role"))
-                    };
+                        UserData = new t_User1
+                        {
+                            c_userId = reader.GetInt32(reader.GetOrdinal("c_userId")),
+                            c_userName = reader.GetString(reader.GetOrdinal("c_userName")),
+                            c_email = reader.GetString(reader.GetOrdinal("c_email")),
+                            c_password = "[PROTECTED]", // Don't expose hash in responses
+                            c_mobile = reader.GetString(reader.GetOrdinal("c_mobile")),
+                            c_gender = reader.GetString(reader.GetOrdinal("c_gender")),
+                            c_address = reader.IsDBNull(reader.GetOrdinal("c_address")) ? null : reader.GetString(reader.GetOrdinal("c_address")),
+                            c_status = reader.GetString(reader.GetOrdinal("c_status")),
+                            c_image = reader.IsDBNull(reader.GetOrdinal("c_image")) ? null : reader.GetString(reader.GetOrdinal("c_image")),
+                            c_role = reader.GetString(reader.GetOrdinal("c_role"))
+                        };
+                    }
                 }
             }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine("GetUserByEmail Error: " + e.Message);
-        }
-        finally
-        {
-            await _conn.CloseAsync();
-        }
-        return UserData;
-    }
-
-    public async Task<(bool success, string message, string token)> InitiatePasswordReset(string email)
-    {
-        try
-        {
-            // First, check if the user exists
-            var user = await GetUserByEmail(email);
-            if (user == null)
+            catch (Exception e)
             {
-                return (false, "No account found with this email address.", null);
+                Console.WriteLine("GetUserByEmail Error: " + e.Message);
             }
+            finally
+            {
+                await _conn.CloseAsync();
+            }
+            return UserData;
+        }
 
-            // Generate a random token (6 digits)
-            var token = GenerateRandomToken();
-            
-            // Store the token in the database
-            await StorePasswordResetToken(email, token);
-            
-            // Create email content
-            string subject = "TaskTrackPro - Password Reset Request";
-            string message = $@"
+        public async Task<(bool success, string message, string token)> InitiatePasswordReset(string email)
+        {
+            try
+            {
+                // First, check if the user exists
+                var user = await GetUserByEmail(email);
+                if (user == null)
+                {
+                    return (false, "No account found with this email address.", null);
+                }
+
+                // Generate a random token (6 digits)
+                var token = GenerateRandomToken();
+
+                // Store the token in the database
+                await StorePasswordResetToken(email, token);
+
+                // Create email content
+                string subject = "TaskTrackPro - Password Reset Request";
+                string message = $@"
                 <html>
                 <head>
                     <style>
@@ -317,164 +400,164 @@ namespace MyApp.Core.Repositories.Implementations
                     </div>
                 </body>
                 </html>";
-            
-            // Send email
-            await _emailService.SendEmailAsync(email, subject, message);
-            
-            // In a real application, you wouldn't return the actual token
-            // For testing purposes, we'll keep this behavior
-            return (true, "Password reset token has been sent to your email address. Please check your inbox.", token);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("InitiatePasswordReset Error: " + ex.Message);
-            return (false, "An error occurred while processing your request.", null);
-        }
-    }
 
-    public async Task<(bool success, string message)> ResetPassword(string email, string token, string newPassword)
-    {
-        try
-        {
-            // Verify the token
-            bool isValid = await ValidatePasswordResetToken(email, token);
-            if (!isValid)
-            {
-                return (false, "Invalid or expired token. Please request a new password reset.");
+                // Send email
+                await _emailService.SendEmailAsync(email, subject, message);
+
+                // In a real application, you wouldn't return the actual token
+                // For testing purposes, we'll keep this behavior
+                return (true, "Password reset token has been sent to your email address. Please check your inbox.", token);
             }
-            
-            // Update the user's password
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword);
-            
-            await _conn.OpenAsync();
-            using (var cmd = new NpgsqlCommand(
-                @"UPDATE t_user SET c_password = @c_password WHERE c_email = @c_email", _conn))
+            catch (Exception ex)
             {
-                cmd.Parameters.AddWithValue("@c_email", email);
-                cmd.Parameters.AddWithValue("@c_password", hashedPassword);
-                
-                int rowsAffected = await cmd.ExecuteNonQueryAsync();
-                if (rowsAffected > 0)
+                Console.WriteLine("InitiatePasswordReset Error: " + ex.Message);
+                return (false, "An error occurred while processing your request.", null);
+            }
+        }
+
+        public async Task<(bool success, string message)> ResetPassword(string email, string token, string newPassword)
+        {
+            try
+            {
+                // Verify the token
+                bool isValid = await ValidatePasswordResetToken(email, token);
+                if (!isValid)
                 {
-                    // Mark the token as used
-                    await MarkTokenAsUsed(email, token);
-                    return (true, "Your password has been successfully reset. You can now login with your new password.");
+                    return (false, "Invalid or expired token. Please request a new password reset.");
                 }
-                else
+
+                // Update the user's password
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword);
+
+                await _conn.OpenAsync();
+                using (var cmd = new NpgsqlCommand(
+                    @"UPDATE t_user SET c_password = @c_password WHERE c_email = @c_email", _conn))
                 {
-                    return (false, "Failed to update password. Please try again.");
+                    cmd.Parameters.AddWithValue("@c_email", email);
+                    cmd.Parameters.AddWithValue("@c_password", hashedPassword);
+
+                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                    if (rowsAffected > 0)
+                    {
+                        // Mark the token as used
+                        await MarkTokenAsUsed(email, token);
+                        return (true, "Your password has been successfully reset. You can now login with your new password.");
+                    }
+                    else
+                    {
+                        return (false, "Failed to update password. Please try again.");
+                    }
                 }
             }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("ResetPassword Error: " + ex.Message);
-            return (false, "An error occurred while resetting your password.");
-        }
-        finally
-        {
-            await _conn.CloseAsync();
-        }
-    }
-    
-    // Helper methods
-    private string GenerateRandomToken()
-    {
-        // Generate a 6-digit numeric token
-        Random random = new Random();
-        return random.Next(100000, 999999).ToString();
-    }
-    
-    private async Task StorePasswordResetToken(string email, string token)
-    {
-        try
-        {
-            // First, invalidate any existing tokens for this email
-            await _conn.OpenAsync();
-            using (var cmd = new NpgsqlCommand(
-                @"UPDATE t_password_reset_tokens SET used = true WHERE email = @email AND used = false", _conn))
+            catch (Exception ex)
             {
-                cmd.Parameters.AddWithValue("@email", email);
-                await cmd.ExecuteNonQueryAsync();
+                Console.WriteLine("ResetPassword Error: " + ex.Message);
+                return (false, "An error occurred while resetting your password.");
             }
-            await _conn.CloseAsync();
-            
-            // Then, insert the new token
-            await _conn.OpenAsync();
-            using (var cmd = new NpgsqlCommand(
-                @"INSERT INTO t_password_reset_tokens(email, token, expiry_date, used) 
+            finally
+            {
+                await _conn.CloseAsync();
+            }
+        }
+
+        // Helper methods
+        private string GenerateRandomToken()
+        {
+            // Generate a 6-digit numeric token
+            Random random = new Random();
+            return random.Next(100000, 999999).ToString();
+        }
+
+        private async Task StorePasswordResetToken(string email, string token)
+        {
+            try
+            {
+                // First, invalidate any existing tokens for this email
+                await _conn.OpenAsync();
+                using (var cmd = new NpgsqlCommand(
+                    @"UPDATE t_password_reset_tokens SET used = true WHERE email = @email AND used = false", _conn))
+                {
+                    cmd.Parameters.AddWithValue("@email", email);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+                await _conn.CloseAsync();
+
+                // Then, insert the new token
+                await _conn.OpenAsync();
+                using (var cmd = new NpgsqlCommand(
+                    @"INSERT INTO t_password_reset_tokens(email, token, expiry_date, used) 
                   VALUES (@email, @token, @expiry_date, false)", _conn))
+                {
+                    cmd.Parameters.AddWithValue("@email", email);
+                    cmd.Parameters.AddWithValue("@token", token);
+                    cmd.Parameters.AddWithValue("@expiry_date", DateTime.UtcNow.AddMinutes(15)); // Token expires in 15 minutes
+                    cmd.Parameters.AddWithValue("@used", false);
+
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception ex)
             {
-                cmd.Parameters.AddWithValue("@email", email);
-                cmd.Parameters.AddWithValue("@token", token);
-                cmd.Parameters.AddWithValue("@expiry_date", DateTime.UtcNow.AddMinutes(15)); // Token expires in 15 minutes
-                cmd.Parameters.AddWithValue("@used", false);
-                
-                await cmd.ExecuteNonQueryAsync();
+                Console.WriteLine("StorePasswordResetToken Error: " + ex.Message);
+                throw;
+            }
+            finally
+            {
+                await _conn.CloseAsync();
             }
         }
-        catch (Exception ex)
+
+        private async Task<bool> ValidatePasswordResetToken(string email, string token)
         {
-            Console.WriteLine("StorePasswordResetToken Error: " + ex.Message);
-            throw;
-        }
-        finally
-        {
-            await _conn.CloseAsync();
-        }
-    }
-    
-    private async Task<bool> ValidatePasswordResetToken(string email, string token)
-    {
-        try
-        {
-            await _conn.OpenAsync();
-            using (var cmd = new NpgsqlCommand(
-                @"SELECT COUNT(*) FROM t_password_reset_tokens 
+            try
+            {
+                await _conn.OpenAsync();
+                using (var cmd = new NpgsqlCommand(
+                    @"SELECT COUNT(*) FROM t_password_reset_tokens 
                   WHERE email = @email AND token = @token AND used = false AND expiry_date > @current_time", _conn))
+                {
+                    cmd.Parameters.AddWithValue("@email", email);
+                    cmd.Parameters.AddWithValue("@token", token);
+                    cmd.Parameters.AddWithValue("@current_time", DateTime.UtcNow);
+
+                    int count = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+                    return count > 0;
+                }
+            }
+            catch (Exception ex)
             {
-                cmd.Parameters.AddWithValue("@email", email);
-                cmd.Parameters.AddWithValue("@token", token);
-                cmd.Parameters.AddWithValue("@current_time", DateTime.UtcNow);
-                
-                int count = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-                return count > 0;
+                Console.WriteLine("ValidatePasswordResetToken Error: " + ex.Message);
+                return false;
+            }
+            finally
+            {
+                await _conn.CloseAsync();
             }
         }
-        catch (Exception ex)
+
+        private async Task MarkTokenAsUsed(string email, string token)
         {
-            Console.WriteLine("ValidatePasswordResetToken Error: " + ex.Message);
-            return false;
-        }
-        finally
-        {
-            await _conn.CloseAsync();
-        }
-    }
-    
-    private async Task MarkTokenAsUsed(string email, string token)
-    {
-        try
-        {
-            await _conn.OpenAsync();
-            using (var cmd = new NpgsqlCommand(
-                @"UPDATE t_password_reset_tokens SET used = true 
+            try
+            {
+                await _conn.OpenAsync();
+                using (var cmd = new NpgsqlCommand(
+                    @"UPDATE t_password_reset_tokens SET used = true 
                   WHERE email = @email AND token = @token", _conn))
+                {
+                    cmd.Parameters.AddWithValue("@email", email);
+                    cmd.Parameters.AddWithValue("@token", token);
+
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception ex)
             {
-                cmd.Parameters.AddWithValue("@email", email);
-                cmd.Parameters.AddWithValue("@token", token);
-                
-                await cmd.ExecuteNonQueryAsync();
+                Console.WriteLine("MarkTokenAsUsed Error: " + ex.Message);
+            }
+            finally
+            {
+                await _conn.CloseAsync();
             }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine("MarkTokenAsUsed Error: " + ex.Message);
-        }
-        finally
-        {
-            await _conn.CloseAsync();
-        }
-    }
     }
 }

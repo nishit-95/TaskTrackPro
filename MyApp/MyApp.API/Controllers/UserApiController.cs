@@ -83,19 +83,11 @@ namespace MyApp.API.Controllers
 
         #endregion
 
-        [HttpPost("index")]
-        public async Task<IActionResult> IndexTask([FromBody] t_task task)
-        {
-            await _elasticSearchService.IndexTask(task);
-            return Ok("Task indexed successfully.");
-        }
-
-        // ✅ Search & Filter Tasks
         [HttpGet("search")]
-        public async Task<IActionResult> SearchTasks([FromQuery] string query, [FromQuery] string status = null)
+        public async Task<IActionResult> SearchTasks([FromQuery] string query)
         {
-            var results = await _elasticSearchService.SearchTasks(query, status);
-            return Ok(results);
+            var tasks = await _elasticSearchService.SearchTasks(query);
+            return Ok(tasks);
         }
 
 
@@ -155,6 +147,16 @@ namespace MyApp.API.Controllers
             }
         }
 
+        [HttpGet("sendNotification/{taskTitle}/{userId}/{taskId}")]
+        public async Task<IActionResult> sendNotification(string taskTitle, int userId, int taskId)
+        {
+            int result = await _userServices.SendNotification(taskTitle, userId, taskId);
+            if (result == 0)
+            {
+                return BadRequest("Notificcation was not sent");
+            }
+            return Ok("Notification Sent successfully.");
+        }
         [HttpPost]
         [Route("Register")]
         public async Task<IActionResult> Register([FromForm] t_User1 user)
