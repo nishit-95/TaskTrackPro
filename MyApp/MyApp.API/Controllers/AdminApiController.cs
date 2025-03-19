@@ -17,15 +17,12 @@ namespace MyApp.API.Controllers
         private readonly IRabbitMQService rabbitMQService;
         private readonly IRedisService redisService;
         private readonly IAdminInterface _admin;
-        private readonly ConnectionMultiplexer _redis;
         private readonly string _connectionString;
 
 
-        public AdminApiController(IConfiguration configuration, IAdminInterface admin, IRabbitMQService _rabbitMQService, IRedisService _redisService)
+        public AdminApiController(IConfiguration configuration, IAdminInterface admin)
         {
             _admin = admin;
-            this.rabbitMQService = _rabbitMQService;
-            this.redisService = _redisService;
             _connectionString = configuration.GetConnectionString("pgconn");
         }
 
@@ -149,7 +146,7 @@ namespace MyApp.API.Controllers
             using var conn = new NpgsqlConnection(_connectionString);
             conn.Open();
 
-            string sql = "SELECT c_notificationId, c_title FROM t_notification WHERE c_isRead = FALSE AND c_title ILIKE '%registered%' ORDER BY c_notificationId DESC";
+            string sql = "SELECT c_notificationId, c_title FROM t_notification WHERE c_isRead = false ORDER BY c_notificationId DESC";
 
             using var cmd = new NpgsqlCommand(sql, conn);
             using var reader = cmd.ExecuteReader();
@@ -165,6 +162,7 @@ namespace MyApp.API.Controllers
 
             return Ok(notifications);
         }
+
 
 
         [HttpPost("mark-notification-read/{id}")]
@@ -325,7 +323,7 @@ namespace MyApp.API.Controllers
             return Ok("Message sent successfully, and saved in Redis with key : " + redisKey);
         }
 
-        
+
 
         [HttpGet("receive")]
         public async Task<IActionResult> ReceiveMessage([FromQuery] string queueName, [FromQuery] string redisKey)

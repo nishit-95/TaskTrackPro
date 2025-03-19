@@ -83,19 +83,11 @@ namespace MyApp.API.Controllers
 
         #endregion
 
-        [HttpPost("index")]
-        public async Task<IActionResult> IndexTask([FromBody] t_task task)
-        {
-            await _elasticSearchService.IndexTask(task);
-            return Ok("Task indexed successfully.");
-        }
-
-        // ✅ Search & Filter Tasks
         [HttpGet("search")]
-        public async Task<IActionResult> SearchTasks([FromQuery] string query, [FromQuery] string status = null)
+        public async Task<IActionResult> SearchTasks([FromQuery] string query)
         {
-            var results = await _elasticSearchService.SearchTasks(query, status);
-            return Ok(results);
+            var tasks = await _elasticSearchService.SearchTasks(query);
+            return Ok(tasks);
         }
 
 

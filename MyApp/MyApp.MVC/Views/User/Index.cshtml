@@ -58,18 +58,14 @@
       </div>
       <div class="nav-right">
         <ul class="user-menu">
-          <li class="support-mail-wrapper">
-            <a href="javascript:void(0)" class="help">
-              <span class="icon"><i class="icon-help"></i></span>
-            </a>
-          </li>
-          <li class="notification-item item">
+          
+          @* <li class="notification-item item">
             <a href="javascript:void(0)">
               <span class="icon"><i class="icon-notification"></i></span>
               <!-- here we need to give notification -->
               <span class="counts">12</span>
             </a>
-          </li>
+          </li> *@
           <li class="separator"></li>
           <li class="userprofile-item userprofile dropdown">
             <a href="javascript:void(0)">
@@ -86,8 +82,8 @@
   <!--navigation pages-->
   <nav class="mt-navbar-pages">
     <ul class="list-inline pages-menu">
-      <li class="active">
-        <a href="dashboard.html" title="Dashboard">Dashboard</a>
+      <li>
+        <a asp-controller="User" asp-action="Index" title="Dashboard">Dashboard</a>
       </li>
       <li><a asp-controller="User" asp-action="Chat" title="Chat">Chat</a></li>
     </ul>
@@ -285,13 +281,13 @@
     </div>
   </div>
 
-  <div class="notification-box success" id="user-update-notification" style="display: block;">
+  @* <div class="notification-box success" id="user-update-notification" style="display: block;">
     <div class="notification-alert success user-update">
       <div class="pull-left"><i class="icon-check" aria-hidden="true"></i></div>
       <div class="pull-right" role="alert" aria-label="Success">
       </div>
     </div>
-  </div>
+  </div> *@
 
   <!-- end user profile -->
   <!-- main content -->

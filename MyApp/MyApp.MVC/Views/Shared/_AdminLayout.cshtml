@@ -39,7 +39,7 @@
         .notification-item {
             position: relative;
         }
-    
+
         /* Counter badge */
         .counts {
             position: absolute;
@@ -48,9 +48,10 @@
             font-size: 12px;
             padding: 3px 6px;
             border-radius: 50%;
-            display: none; /* Initially hidden */
+            display: none;
+            /* Initially hidden */
         }
-    
+
         /* Notification panel */
         .notification-panel {
             display: none;
@@ -65,7 +66,7 @@
             padding: 10px;
             z-index: 1000;
         }
-    
+
         .notification-panel ul {
             list-style: none;
             padding: 0;
@@ -74,17 +75,19 @@
             overflow-y: auto;
 
         }
-    
+
         .notification-panel ul li {
             padding: 8px;
             border-bottom: 1px solid #eee;
-            color: black !important; /* Ensure text is black */
+            color: black !important;
+            /* Ensure text is black */
             font-weight: bold;
         }
-    
+
         .notification-panel ul li:last-child {
             border-bottom: none;
         }
+
         #notificationsList li {
             display: flex;
             align-items: center;
@@ -94,10 +97,11 @@
             margin-bottom: 5px;
             border-radius: 5px;
             font-size: 14px;
-            border-left: 4px solid #7e57c2; /* Purple highlight */
+            border-left: 4px solid #7e57c2;
+            /* Purple highlight */
             white-space: nowrap;
         }
-        
+
         .mark-read-btn {
             background-color: #7e57c2 !important;
             border: none;
@@ -106,16 +110,16 @@
             font-size: 14px;
             border-radius: 4px;
             cursor: pointer;
-            margin-left: 10px; /* Add space between text and button */
+            margin-left: 10px;
+            /* Add space between text and button */
         }
-        
+
         #notificationsList {
             padding: 0;
             margin: 0;
             max-height: 250px;
             overflow-y: auto;
         }
-        
     </style>
 
 </head>
@@ -176,110 +180,116 @@
                     User Approval <span id="pendingUserCounter" class="badge bg-danger">0</span>
                 </a>
             </li>
+            <li>
+                <a class="nav-link text-dark" asp-area="" asp-controller="User" asp-action="Login" onclick="logoutUser()">Logout</a>
+            </li>
 
         </ul>
     </nav>
     <!--#navigation pages-->
 
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+    <div class=" container">
+                    <main role="main" class="pb-3">
+                        @RenderBody()
+                    </main>
+                    </div>
 
-    <script src="../../Scripts/CLARENT/Other/Custom/Custom.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+                    <script src="../../Scripts/CLARENT/Other/Custom/Custom.js"></script>
+                    <script src="~/js/site.js" asp-append-version="true"></script>
 
-    <script>
-        $(document).ready(function () {
-            let notificationCount = 0;
+                    <script>
+                        function logoutUser() {
+                            localStorage.clear();
+                        }
+                        $(document).ready(function () {
+                            let notificationCount = 0;
 
-            // Function to fetch notifications
-            function fetchNotifications() {
-                $.get("http://localhost:5112/api/AdminApi/notifications", function (data) {
-                    let notificationList = $("#notificationsList");
-                    notificationList.empty();
+                            // Function to fetch notifications
+                            function fetchNotifications() {
+                                $.get("http://localhost:5112/api/AdminApi/notifications", function (data) {
+                                    let notificationList = $("#notificationsList");
+                                    notificationList.empty();
 
-                    if (data.length > 0) {
-                        notificationCount = data.length;
-                        $("#notificationCounter").text(notificationCount).show();
-                    } else {
-                        $("#notificationCounter").hide();
-                    }
+                                    if (data.length > 0) {
+                                        notificationCount = data.length;
+                                        $("#notificationCounter").text(notificationCount).show();
+                                    } else {
+                                        $("#notificationCounter").hide();
+                                    }
 
-                    data.forEach(notification => {
-                        notificationList.append(`
+                                    data.forEach(notification => {
+                                        notificationList.append(`
                             <li id="notification-${notification.id}">
                                 ${notification.title}
                                 <button class="mark-read-btn btn btn-sm btn-light" data-id="${notification.id}">✔</button>
                             </li>
                         `);
-                    });
-                });
-            }
+                                    });
+                                });
+                            }
 
-            // Fetch notifications every 5 seconds
-            setInterval(fetchNotifications, 5000);
-            fetchNotifications();
+                            // Fetch notifications every 5 seconds
+                            setInterval(fetchNotifications, 5000);
+                            fetchNotifications();
 
-            // Toggle notification panel when bell icon is clicked
-            $("#notificationBell").click(function () {
-                $("#notificationPanel").toggle();
-            });
+                            // Toggle notification panel when bell icon is clicked
+                            $("#notificationBell").click(function () {
+                                $("#notificationPanel").toggle();
+                            });
 
-            // Mark individual notification as read
-            $(document).on("click", ".mark-read-btn", function () {
-                let notificationId = $(this).data("id");
+                            // Mark individual notification as read
+                            $(document).on("click", ".mark-read-btn", function () {
+                                let notificationId = $(this).data("id");
 
-                $.post(`http://localhost:5112/api/AdminApi/mark-notification-read/${notificationId}`, function () {
-                    $(`#notification-${notificationId}`).remove(); // Remove from UI
+                                $.post(`http://localhost:5112/api/AdminApi/mark-notification-read/${notificationId}`, function () {
+                                    $(`#notification-${notificationId}`).remove(); // Remove from UI
 
-                    // Update counter
-                    notificationCount--;
-                    if (notificationCount > 0) {
-                        $("#notificationCounter").text(notificationCount);
-                    } else {
-                        $("#notificationCounter").hide();
-                    }
-                });
-            });
+                                    // Update counter
+                                    notificationCount--;
+                                    if (notificationCount > 0) {
+                                        $("#notificationCounter").text(notificationCount);
+                                    } else {
+                                        $("#notificationCounter").hide();
+                                    }
+                                });
+                            });
 
-            // Close notification panel when clicking outside
-            $(document).click(function (event) {
-                if (!$(event.target).closest('.notification-item').length) {
-                    $("#notificationPanel").hide();
-                }
-            });
-        });
-    </script>
+                            // Close notification panel when clicking outside
+                            $(document).click(function (event) {
+                                if (!$(event.target).closest('.notification-item').length) {
+                                    $("#notificationPanel").hide();
+                                }
+                            });
+                        });
+                    </script>
 
-    <script>
-        $(document).ready(function () {
-            function fetchPendingUserCount() {
-                $.get("http://localhost:5112/api/AdminApi/pendingUserCount", function (data) {
-                    $("#pendingUserCounter").text(data);
-                    if (data == 0) {
-                        $("#pendingUserCounter").hide();  // Hide badge if no pending users
-                    } else {
-                        $("#pendingUserCounter").show();
-                    }
-                });
-            }
+                    <script>
+                        $(document).ready(function () {
+                            function fetchPendingUserCount() {
+                                $.get("http://localhost:5112/api/AdminApi/pendingUserCount", function (data) {
+                                    $("#pendingUserCounter").text(data);
+                                    if (data == 0) {
+                                        $("#pendingUserCounter").hide();  // Hide badge if no pending users
+                                    } else {
+                                        $("#pendingUserCounter").show();
+                                    }
+                                });
+                            }
 
-            // Fetch count on page load
-            fetchPendingUserCount();
+                            // Fetch count on page load
+                            fetchPendingUserCount();
 
-            // Update count every second for real-time update
-            setInterval(fetchPendingUserCount, 1000);
+                            // Update count every second for real-time update
+                            setInterval(fetchPendingUserCount, 1000);
 
-            // Update count instantly when approving/rejecting users
-            $(document).on("click", ".approve-btn, .reject-btn", function () {
-                setTimeout(fetchPendingUserCount, 500); // Ensure database update reflects in counter
-            });
-        });
-    </script>
+                            // Update count instantly when approving/rejecting users
+                            $(document).on("click", ".approve-btn, .reject-btn", function () {
+                                setTimeout(fetchPendingUserCount, 500); // Ensure database update reflects in counter
+                            });
+                        });
+                    </script>
 
-    <script type="text/x-kendo-template" id="thumnail_template">
+                    <script type="text/x-kendo-template" id="thumnail_template">
         <div class="thumbnail-item">
             <div class="thumbnail-item-wrapper">
                 <span class="date">02-Feb-21</span>
@@ -306,52 +316,52 @@
         </div>
     </script>
 
-    <script>
-        $(document).ready(function () {
+                    <script>
+                        $(document).ready(function () {
 
-            $("select:not([multiple])").kendoDropDownList();
-            //Kendo File Upload
-            $("#fileProfileImage").kendoUpload({
-                showFileList: false,
-                multiple: false,
-                localization: { select: 'Select File' }
-            });
+                            $("select:not([multiple])").kendoDropDownList();
+                            //Kendo File Upload
+                            $("#fileProfileImage").kendoUpload({
+                                showFileList: false,
+                                multiple: false,
+                                localization: { select: 'Select File' }
+                            });
 
-            $("#tabstrip").kendoTabStrip({
-                animation: {
-                    open: {
-                        effects: "fadeIn"
-                    }
-                }
-            });
+                            $("#tabstrip").kendoTabStrip({
+                                animation: {
+                                    open: {
+                                        effects: "fadeIn"
+                                    }
+                                }
+                            });
 
-            $("#borederTabstrip").kendoTabStrip({
-                animation: {
-                    open: {
-                        effects: "fadeIn"
-                    }
-                }
-            });
+                            $("#borederTabstrip").kendoTabStrip({
+                                animation: {
+                                    open: {
+                                        effects: "fadeIn"
+                                    }
+                                }
+                            });
 
-            var dataSource = new kendo.data.DataSource({
-                transport: {
-                    read: {
-                        url: "https://demos.telerik.com/kendo-ui/service/Products",
-                        dataType: "jsonp"
-                    }
-                },
-            });
+                            var dataSource = new kendo.data.DataSource({
+                                transport: {
+                                    read: {
+                                        url: "https://demos.telerik.com/kendo-ui/service/Products",
+                                        dataType: "jsonp"
+                                    }
+                                },
+                            });
 
-            $("#thumbnail_grid").kendoListView({
-                dataSource: dataSource,
-                selectable: "multiple",
-                template: kendo.template($("#thumnail_template").html())
-            });
+                            $("#thumbnail_grid").kendoListView({
+                                dataSource: dataSource,
+                                selectable: "multiple",
+                                template: kendo.template($("#thumnail_template").html())
+                            });
 
-        });
-    </script>
+                        });
+                    </script>
 
-    @await RenderSectionAsync("Scripts", required: false)
+                    @await RenderSectionAsync("Scripts", required: false)
 </body>
 
 </html>
