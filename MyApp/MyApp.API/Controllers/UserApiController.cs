@@ -19,21 +19,24 @@ namespace MyApp.API.Controllers
     {
         private readonly IUserInterface _userServices;
         private readonly NpgsqlConnection _conn;
-
+        private readonly IConfiguration myConfig;
         private readonly ElasticSearchService _elasticSearchService;
         // private readonly RabbitMQService _rabbitMQService;
         private readonly RedisService _redisService;
 
+        private readonly MRedisService _MredisService;
         private readonly RabbitMQService _rabbitMQService;
         private readonly IUserInterface _userRepo;
 
-        public UserApiController(ElasticSearchService elasticSearchService, RabbitMQService rabbitMQService, NpgsqlConnection conn, IUserInterface userServices, RedisService redisService, IUserInterface userRepo)
+        public UserApiController(IConfiguration config, ElasticSearchService elasticSearchService, RabbitMQService rabbitMQService, NpgsqlConnection conn, IUserInterface userServices, RedisService redisService, MRedisService MredisService, IUserInterface userRepo)
         {
             // RabbitMQService rabbitMQService
             _elasticSearchService = elasticSearchService;
             // _rabbitMQService = rabbitMQService;
+            myConfig = config;
             _userServices = userServices;
             _redisService = redisService;
+            _MredisService = MredisService;
             _rabbitMQService = rabbitMQService;
             _conn = conn;
             _userRepo = userRepo;
@@ -317,6 +320,98 @@ namespace MyApp.API.Controllers
             {
                 return StatusCode(500, new { success = false, message = $"Server error: {ex.Message}" });
             }
+        }
+
+ [HttpGet("notifications/{userId}")]
+        public async Task<IActionResult> GetUserNotifications(int userId)
+        {
+            // var notifications = await _redisService.GetCachedNotifications(userId);
+            // if (notifications == null || notifications.Count == 0)
+            // {
+            //     notifications = await _userRepo.GetNotificationsByUserIdAsync(userId);
+            // }
+
+            // return Ok(notifications);
+
+            int userID = 6;
+
+            // var cachedNotifications = await _redisService.GetCachedNotifications(userId);
+            var cachedNotifications = await _MredisService.GetCachedNotifications(userID);
+
+            // Retrieve unread notifications from the database
+            // var dbNotifications = await _userRepo.GetNotificationsByUserIdAsync(userId);
+            var dbNotifications = await _userRepo.GetNotificationsByUserIdAsync(userID);
+
+            // Combine the cached and database notifications
+            var allNotifications = dbNotifications
+                .Concat(cachedNotifications ?? new List<t_Notification>())
+                .Where(n => !n.IsRead)
+                .DistinctBy(n => n.NotificationId) // Ensure no duplicates
+                .OrderByDescending(n => n.CreatedAt) // Sort by creation time (newest first)
+                .ToList();
+
+            return Ok(allNotifications);
+        }
+        [HttpGet("notifications/count")]
+        public async Task<IActionResult> GetUnreadNotificationCount(int userId)
+        {
+            // Fetch the current user ID (you can get this from the claims or session)
+            var currentUserId = "6";
+            // var currentUserId = User.FindFirst("UserId")?.Value;
+            if (string.IsNullOrEmpty(currentUserId))
+            {
+                return Unauthorized();
+            }
+
+            // Fetch unread notifications from the database
+            var unreadCount = await _userRepo.GetUnreadNotificationCount(int.Parse(currentUserId));
+
+            return Ok(new { count = unreadCount });
+        }
+        [HttpPost("notifications/mark-as-read")]
+        public async Task<IActionResult> MarkNotificationAsRead([FromBody] int notificationId)
+        {
+            // Fetch the current user ID (you can get this from the claims or session)
+            // var currentUserId = User.FindFirst("UserId")?.Value;
+            var currentUserId = "6";
+            if (string.IsNullOrEmpty(currentUserId))
+            {
+                return Unauthorized();
+            }
+
+            // Mark the notification as read in the database
+            await _userRepo.MarkNotificationAsRead(int.Parse(currentUserId), notificationId);
+
+            // Remove the notification from Redis
+            await _MredisService.RemoveNotificationFromRedis(int.Parse(currentUserId), notificationId);
+
+            // Fetch the updated unread notification count
+            var unreadCount = await _userRepo.GetUnreadNotificationCount(int.Parse(currentUserId));
+
+            return Ok(new { count = unreadCount });
+        }
+        [HttpGet("subscribe/{userId}")]
+        public IActionResult SubscribeNotifications(int userId)
+        {
+            _MredisService.SubscribeNotifications(userId, (message) =>
+            {
+                Console.WriteLine($"[New Notification for User {userId}]: {message}");
+            });
+
+            return Ok(new { message = $"Subscribed to notifications for user {userId}" });
+        }
+
+        [HttpGet("notification/task-details/{notificationId}")]
+        public async Task<IActionResult> GetTaskDetailsFromNotification(int notificationId)
+        {
+            var task = await _userRepo.GetTaskByNotificationAsync(notificationId);
+
+            if (task == null)
+            {
+                return NotFound(new { message = "Task not found for this notification" });
+            }
+
+            return Ok(task);
         }
 
 

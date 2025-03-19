@@ -496,5 +496,56 @@ namespace MyApp.Core.Repositories.Implementations
             }
         }
 
+        public async Task<int> AddNotification(t_Notification notification)
+        {
+            // using var connection = new NpgsqlConnection(_connectionString);
+            // string query = "INSERT INTO public.t_notification (c_title, c_taskid, c_userid, c_isread) VALUES (@Title, @TaskId, @UserId, false)";
+            // await connection.ExecuteAsync(query, notification);
+
+            using (var cmd = new NpgsqlCommand("INSERT INTO t_notification (c_title, c_taskId, c_userId, c_isread) VALUES (@Title, @TaskId, @UserId, false)", _conn))
+            {
+                cmd.Parameters.AddWithValue("@Title", notification.Title);
+                cmd.Parameters.AddWithValue("@TaskId", notification.TaskId);
+                cmd.Parameters.AddWithValue("@UserId", notification.UserId);
+
+                try
+                {
+                    _conn.Open();
+                    cmd.ExecuteNonQuery();
+                    return 1;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error: " + ex.Message);
+                    return 0;
+                }
+                finally
+                {
+                    _conn.Close();
+                }
+            }
+        }
+
+        public async Task<List<int>> GetUsersWithPendingNotifications()
+        {
+            List<int> userIds = new List<int>();
+
+            await _conn.OpenAsync();
+
+            string sql = "SELECT DISTINCT c_userId FROM t_notification WHERE c_isRead = FALSE AND c_taskId IS NOT NULL  ORDER BY c_userId";
+
+            using var cmd = new NpgsqlCommand(sql, _conn);
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                userIds.Add(reader.GetInt32(0)); // Get UserId
+            }
+
+            _conn.Close(); // Close connection after query execution
+
+            return userIds;
+        }
+
     }
 }

@@ -7,6 +7,8 @@ using StackExchange.Redis;
 using MyApp.Core.Models;
 using MyApp.MVC.Models;
 using MyApp.Core.Services;
+using MyApp.Core.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace MyApp.API.Controllers
 {
@@ -19,6 +21,9 @@ namespace MyApp.API.Controllers
         private readonly IAdminInterface _admin;
         private readonly ConnectionMultiplexer _redis;
         private readonly string _connectionString;
+        private readonly MRabbitMQService _rabbitMQService;
+        private readonly MRedisService _redisService;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
 
         public AdminApiController(IConfiguration configuration, IAdminInterface admin, IRabbitMQService _rabbitMQService, IRedisService _redisService)
@@ -216,19 +221,70 @@ namespace MyApp.API.Controllers
         }
 
         // admin can assign task to user
+        // [HttpPost("AssignTask")]
+        // public async Task<IActionResult> AssignTask([FromBody] TaskAssign taskAssign)
+        // {
+        //     try
+        //     {
+        //         var result = await _admin.AssignTask(taskAssign);
+        //         return Ok(result);
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return BadRequest(ex.Message);
+        //     }
+        // }
+
         [HttpPost("AssignTask")]
-        public async Task<IActionResult> AssignTask([FromBody] TaskAssign taskAssign)
+public async Task<IActionResult> AssignTask([FromBody] TaskAssign taskAssign)
+{
+    try
+    {
+        // Assign the task
+        var result = await _admin.AssignTask(taskAssign);
+
+        // Create notification object
+        var notification = new t_Notification
         {
-            try
-            {
-                var result = await _admin.AssignTask(taskAssign);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
+            TaskId = taskAssign.TaskId,
+            UserId = taskAssign.UserId,
+            Title = $"New Task Assigned: {taskAssign.Title}",
+            IsRead = false,  // Default to unread
+            CreatedAt = DateTime.UtcNow
+        };
+
+        // Save notification to DB
+        await _admin.AddNotification(notification);
+
+        // Construct detailed notification message
+        string notificationMessage = $"Task Assigned: {taskAssign.Title}\n" +
+                                     $"Description: {taskAssign.Description}\n" +
+                                     $"Start Date: {taskAssign.StartDate:yyyy-MM-dd}\n" +
+                                     $"End Date: {taskAssign.EndDate:yyyy-MM-dd}\n" +
+                                     $"Estimated Days: {taskAssign.EstimatedDays}\n" +
+                                     $"Status: {taskAssign.Status}";
+
+        // Send notification via SignalR to the specific user
+        await _hubContext.Clients.User(notification.UserId.ToString())
+            .SendAsync("ReceiveNotification", notificationMessage);
+
+        // Cache notification in Redis
+        await _redisService.CacheNotifications(notification.UserId, new List<t_Notification> { notification });
+
+        // Publish notification to Redis pub-sub
+        _redisService.PublishNotification(notification.UserId.ToString(), notificationMessage);
+
+        // Send notification via RabbitMQ
+        _rabbitMQService.PublishMessageTask(notification.UserId, notification);
+
+        return Ok(new { message = $"Task assigned to user {notification.UserId}, notification sent!", result });
+    }
+    catch (Exception ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}
+
 
         [HttpPut("UpdateTask")]
         public async Task<IActionResult> UpdateTask([FromBody] TaskAssign taskAssign)

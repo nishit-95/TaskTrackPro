@@ -34,5 +34,7 @@ namespace MyApp.Core.Repositories.Interfaces
 
         // task delete by id
         Task<int>DeleteTask(int taskId);
+        Task<int> AddNotification(t_Notification notification);
+        Task<List<int>> GetUsersWithPendingNotifications();
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Schema;
@@ -465,5 +466,174 @@ namespace MyApp.Core.Repositories.Implementations
             await _conn.CloseAsync();
         }
     }
+
+    public async Task<List<t_Notification>> GetNotificationsByUserIdAsync(int userId)
+        {
+           List<t_Notification> notificationList = new List<t_Notification>();
+
+            try
+            {
+                await _conn.OpenAsync();
+
+                await using (NpgsqlCommand cmd = new NpgsqlCommand("SELECT n.c_notificationId, n.c_title, n.c_taskId, n.c_userId, n.c_isRead, n.c_createdAt FROM t_notification n INNER JOIN t_task t ON n.c_taskId = t.c_taskId WHERE n.c_userId = @UserId AND n.c_taskId IS NOT NULL AND n.c_isRead = false AND t.c_status != 'Completed' ORDER BY n.c_notificationId DESC;", _conn))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+
+                    using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            notificationList.Add(new t_Notification()
+                            {
+                                NotificationId = reader.GetInt32(reader.GetOrdinal("c_notificationId")),
+                                Title = reader.GetString(reader.GetOrdinal("c_title")),
+                                TaskId = reader.GetInt32(reader.GetOrdinal("c_taskId")),
+                                UserId = reader.GetInt32(reader.GetOrdinal("c_userId")),
+                                IsRead = reader.GetBoolean(reader.GetOrdinal("c_isRead")),
+                                CreatedAt = reader.GetDateTime(reader.GetOrdinal("c_createdAt"))
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
+            finally
+            {
+                if (_conn.State == System.Data.ConnectionState.Open)
+                {
+                    await _conn.CloseAsync();
+                }
+            }
+
+            return notificationList;
+        }
+
+        public async Task<int> GetUnreadNotificationCount(int userId)
+        {
+            int unreadCount = 0;
+
+            try
+            {
+                await _conn.OpenAsync();
+
+                await using (NpgsqlCommand cmd = new NpgsqlCommand("SELECT COUNT(*) FROM t_notification WHERE c_userId = @UserId AND c_isRead = false", _conn))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    unreadCount = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
+            finally
+            {
+                if (_conn.State == System.Data.ConnectionState.Open)
+                {
+                    await _conn.CloseAsync();
+                }
+            }
+
+            return unreadCount;
+        }
+
+        public async Task MarkNotificationAsRead(int userId, int notificationId)
+        {
+            try
+            {
+                await _conn.OpenAsync();
+
+                // Update the notification to mark it as read
+                await using (var cmd = new NpgsqlCommand("UPDATE t_notification SET c_isRead = true WHERE c_notificationId = @NotificationId AND c_userId = @UserId", _conn))
+                {
+                    cmd.Parameters.AddWithValue("@NotificationId", notificationId);
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                throw; // Re-throw the exception to handle it in the controller
+            }
+            finally
+            {
+                if (_conn.State == System.Data.ConnectionState.Open)
+                {
+                    await _conn.CloseAsync();
+                }
+            }
+        }
+
+        public async Task<t_task> GetTaskByNotificationAsync(int notificationId)
+        {
+             DataTable dt = new DataTable();
+            string query = @"SELECT t.c_title, t.c_description, t.c_estimatedDays, t.c_startDate, t.c_endDate, t.c_status FROM t_task t INNER JOIN t_notification n ON t.c_taskId = n.c_taskId WHERE n.c_notificationId = @NotificationId;";
+
+            try
+            {
+                await _conn.OpenAsync();
+                await using (NpgsqlCommand cmd = new NpgsqlCommand(query, _conn))
+                {
+                    cmd.Parameters.AddWithValue("@NotificationId", notificationId);
+                    using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        if (reader.HasRows)
+                        {
+                            dt.Load(reader);
+                        }
+                         else
+                        {
+                            Console.WriteLine("No rows found for notificationId: " + notificationId);
+                            return null;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("-----------> GetTaskDetailsByNotificationIdAsync Error: " + ex.Message);
+                return null;
+            }
+            finally
+            {
+                await _conn.CloseAsync();
+            }
+
+            // Convert DataTable to List<t_task>
+            // var taskList = (from DataRow dr in dt.Rows
+            //                 select new t_task()
+            //                 {
+            //                     c_title = dr["c_title"].ToString(),
+            //                     c_description = dr["c_description"].ToString(),
+            //                     c_estimateddays = Convert.ToInt32(dr["c_estimateddays"]),
+            //                     c_startdate = Convert.ToDateTime(dr["c_startdate"]),
+            //                     c_enddate = Convert.ToDateTime(dr["c_enddate"]),
+            //                     c_status = dr["c_status"].ToString()
+            //                 }).ToList();
+
+            // return taskList;
+
+            if (dt.Rows.Count > 0)
+            {
+                var row = dt.Rows[0];
+                return new t_task()
+                {
+                    c_title = row["c_title"].ToString(),
+                    c_description = row["c_description"].ToString(),
+                    c_estimateddays = Convert.ToInt32(row["c_estimateddays"]),
+                    c_startdate = Convert.ToDateTime(row["c_startdate"]),
+                    c_enddate = Convert.ToDateTime(row["c_enddate"]),
+                    c_status = row["c_status"].ToString()
+                };
+            }
+
+            return null;
+
+        }
     }
 }

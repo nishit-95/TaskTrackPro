@@ -1,5 +1,7 @@
 using Elastic.Clients.Elasticsearch;
 using Elastic.Transport;
+using MyApp.Core.Hubs;
+using MyApp.Core.BackgroundServices;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
 using MyApp.Core.Repositories.Implementations;
@@ -24,8 +26,11 @@ var client = new ElasticClient(settings);
 builder.Services.AddScoped<ElasticSearchService>();
 
 builder.Services.AddSingleton<IElasticClient>(client);
-
+builder.Services.AddSignalR();
 builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
+builder.Services.AddSingleton<MRabbitMQService>(new MRabbitMQService("localhost"));
+builder.Services.AddSingleton<MRedisService>(new MRedisService("localhost"));
+builder.Services.AddHostedService<RabbitMQListenerService>();
 builder.Services.AddSingleton<IRedisService, RedisService>();
 builder.Services.AddSingleton<IUserProfileInterface, UserProfileRepository>();
 builder.Services.AddSingleton<IAdminInterface, AdminRepository>();
@@ -72,7 +77,7 @@ builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 }));
 builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 {
-    builder.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
+    builder.WithOrigins("http://localhost:5047").AllowAnyMethod().AllowAnyHeader().AllowCredentials();
 }));
 
 
@@ -194,6 +199,7 @@ app.MapControllerRoute(
 app.MapControllers();
 app.UseCors("corsapp");
 app.UseStaticFiles();
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.Run();
 
